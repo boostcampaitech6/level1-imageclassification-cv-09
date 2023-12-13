@@ -1,0 +1,19 @@
+train_dir : "/data/ephemeral/home/code/boostcamp_pr1/data/train/images"
+loss:
+  name: Cross_entropy #Cross_entropy #FocalLoss # MeanCCELoss
+  args:
+    weight: [1, 1, 1, 1]
+
+metrics: 
+  name : acc
+
+optimizer:
+  name: AdamW
+  args:
+    lr: 5.0e-04
+    weight_decay: 5.0e-02
+
+n_epochs: 100
+
+gpu_num : 0
+wandb : False
