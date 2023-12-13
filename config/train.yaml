@@ -1,4 +1,7 @@
+gpu_num : 0
 train_dir : "/home/hojun/Documents/code/boostcamp_pr1/data/train/images"
+
+#Moel
 loss:
   name: Cross_entropy #Cross_entropy #FocalLoss # MeanCCELoss
   args:
@@ -14,6 +17,7 @@ optimizer:
     weight_decay: 5.0e-02
 
 n_epochs: 100
+early_stopping_count : 7
 
-gpu_num : 0
+
 wandb : False
