@@ -40,6 +40,9 @@ torch.backends.cudnn.benchmark = False
 np.random.seed(seed)
 random.seed(seed)
 
+import warnings
+warnings.filterwarnings('ignore')
+
 train_serial = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_dir = os.path.join(prj_dir, 'log', train_serial)
 if __name__ == "__main__":
@@ -69,7 +72,7 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("device : ",device)
     
- 
+    
             
     transform = transforms.Compose([
     transforms.ToTensor(),
@@ -99,13 +102,15 @@ if __name__ == "__main__":
     # loss_func = loss_func(**config['loss']['args'])
     # loss_func = loss_func()
     
-    metric_func = get_metric_function(config['metrics']['name'])
+    acc_metric_func = get_metric_function('acc')
+    f1_metric_func = get_metric_function('f1_score')
+    max_f1_score = 0
     
     model.train()
     
     for epoch_id in range(config['n_epochs']):
         tic = time()
-        train_loss, train_acc = AverageMeter(), AverageMeter()
+        train_loss, train_metric = AverageMeter(), AverageMeter()
         
         for iter, (img, label) in enumerate(tqdm(train_dataloader)):
             img = img.to(device)
@@ -123,17 +128,20 @@ if __name__ == "__main__":
             optimizer.zero_grad()
 
             # Accuracy 계산
-            acc = metric_func(pred_value,label)
-
+            acc = acc_metric_func(pred_value,label)
+            f1 = f1_metric_func(pred_value,label)
+            
             train_loss.update(loss.item(), batch_size)
-            train_acc.update(acc, batch_size)
-        train_loss = train_loss.avg
-        train_acc = train_acc.avg
+            train_metric.update(acc,f1, batch_size)
+            
+        train_loss = train_loss.acc_avg
+        train_acc = train_metric.acc_avg
+        train_f1 = train_metric.f1_avg
         
         scheduler.step()
             
         # Validation
-        valid_loss, valid_acc = AverageMeter(), AverageMeter()
+        valid_loss, valid_metric = AverageMeter(), AverageMeter()
         # if (iter % 20 == 0) or (iter == len(qd_train_dataloader)-1):
         model.eval()
         toc = time()
@@ -148,17 +156,25 @@ if __name__ == "__main__":
             with torch.no_grad():
                 pred_value = model(img)
             loss = loss_func(pred_value, label)
-            acc = metric_func(pred_value,label)
+            
+            # Accuracy 계산
+            acc = acc_metric_func(pred_value,label)
+            f1 = f1_metric_func(pred_value,label)
+            
                     
             valid_loss.update(loss.item(), batch_size)
-            valid_acc.update(acc, batch_size)
-        valid_loss = valid_loss.avg
-        valid_acc = valid_acc.avg
+            valid_metric.update(acc, f1, batch_size)
+            
+        valid_loss = valid_loss.acc_avg
+        valid_acc = valid_metric.acc_avg
+        valid_f1 = valid_metric.f1_avg
+        
         # print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Valid Loss %.4f | Valid Acc %.4f" %
         #     (epoch_id, config['n_epochs'], train_loss, train_acc, valid_loss, valid_acc))
-        print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Valid Loss %.4f | Valid Acc %.4f" %
-            (epoch_id, config['n_epochs'], train_loss, train_acc, valid_loss, valid_acc))
-        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_acc, "valid_loss":valid_loss, "valid_acc":valid_acc})
+        print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Train F1 %.4f | Valid Loss %.4f | Valid Acc %.4f | Valid F1 %.4f"  %
+            (epoch_id, config['n_epochs'], train_loss, train_acc, train_f1, valid_loss, valid_acc, valid_f1))
+        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_acc,"train_f1":train_f1, "valid_loss":valid_loss, "valid_acc":valid_acc, "valid_f1":valid_f1})
+        
 
 
     # print(model)

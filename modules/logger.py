@@ -5,13 +5,20 @@ class AverageMeter(object):
       self.reset()
 
   def reset(self):
-    self.val = 0
-    self.avg = 0
-    self.sum = 0
+    self.acc_val = 0
+    self.acc_avg = 0
+    self.acc_sum = 0
     self.count = 0
+    self.f1_val = 0
+    self.f1_avg = 0
+    self.f1_sum = 0
 
-  def update(self, val, n=1):
-    self.val = val
-    self.sum += val * n
+  def update(self, acc_val, f1_val, n=1):
+    self.acc_val = acc_val
+    self.acc_sum += acc_val * n
     self.count += n
-    self.avg = self.sum / self.count
+    self.acc_avg = self.acc_sum / self.count
+    
+    self.f1_val = f1_val
+    self.f1_sum += f1_val * n
+    self.f1_avg = self.f1_sum / self.count

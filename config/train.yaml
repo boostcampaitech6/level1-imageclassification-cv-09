@@ -1,11 +1,11 @@
-train_dir : "/data/ephemeral/home/code/boostcamp_pr1/data/train/images"
+train_dir : "/home/hojun/Documents/code/boostcamp_pr1/data/train/images"
 loss:
   name: Cross_entropy #Cross_entropy #FocalLoss # MeanCCELoss
   args:
     weight: [1, 1, 1, 1]
 
 metrics: 
-  name : acc
+  name : f1_score
 
 optimizer:
   name: AdamW
