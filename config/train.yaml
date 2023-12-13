@@ -1,5 +1,6 @@
 gpu_num : 0
 train_dir : "/home/hojun/Documents/code/boostcamp_pr1/data/train/images"
+wandb : True
 
 #Moel
 loss:
@@ -19,5 +20,3 @@ optimizer:
 n_epochs: 100
 early_stopping_count : 7
 
-
-wandb : False
