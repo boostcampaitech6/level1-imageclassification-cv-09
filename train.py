@@ -175,6 +175,9 @@ if __name__ == "__main__":
             (epoch_id, config['n_epochs'], train_loss, train_acc, train_f1, valid_loss, valid_acc, valid_f1))
         wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_acc,"train_f1":train_f1, "valid_loss":valid_loss, "valid_acc":valid_acc, "valid_f1":valid_f1})
         
+        if max_f1_score < valid_f1:
+            torch.save(model.state_dict(),os.path.join(log_dir,f'model_{epoch_id}.pth'))
+        
 
 
     # print(model)
