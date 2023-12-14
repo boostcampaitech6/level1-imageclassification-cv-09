@@ -27,7 +27,7 @@ from modules.schedulers import get_scheduler
 from modules.datasets import MaskBaseDataset
 from modules.metrics import get_metric_function
 from modules.utils import load_yaml,save_yaml
-from modules.logger import AverageMeter
+from modules.logger import MetricAverageMeter,LossAverageMeter
 
 prj_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(prj_dir)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     
     for epoch_id in range(config['n_epochs']):
         tic = time()
-        train_loss, train_metric = AverageMeter(), AverageMeter()
+        train_loss, train_metric = LossAverageMeter(), MetricAverageMeter()
         
         for iter, (img, label) in enumerate(tqdm(train_dataloader)):
             img = img.to(device)
@@ -140,14 +140,14 @@ if __name__ == "__main__":
             train_loss.update(loss.item(), batch_size)
             train_metric.update(acc,f1, batch_size)
             
-        train_loss = train_loss.acc_avg
+        train_loss = train_loss.avg
         train_acc = train_metric.acc_avg
         train_f1 = train_metric.f1_avg
         
         scheduler.step()
             
         # Validation
-        valid_loss, valid_metric = AverageMeter(), AverageMeter()
+        valid_loss, valid_metric = LossAverageMeter(), MetricAverageMeter()
         # if (iter % 20 == 0) or (iter == len(qd_train_dataloader)-1):
         model.eval()
         toc = time()
@@ -171,7 +171,7 @@ if __name__ == "__main__":
             valid_loss.update(loss.item(), batch_size)
             valid_metric.update(acc, f1, batch_size)
             
-        valid_loss = valid_loss.acc_avg
+        valid_loss = valid_loss.avg
         valid_acc = valid_metric.acc_avg
         valid_f1 = valid_metric.f1_avg
         
