@@ -76,19 +76,19 @@ if __name__ == "__main__":
             
     transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Resize((128, 96)),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225])
+    transforms.Resize(config['resize_size']),
+    transforms.Normalize(mean=config['mean'],
+                        std=config['std'])
     ])
 
     
-    dataset = MaskBaseDataset(data_dir, transform)
+    dataset = MaskBaseDataset(data_dir, transform,val_ratio=config['val_size'])
     num_classes = MaskBaseDataset.num_classes
     
     train_dataset, val_dataset = dataset.split_dataset()
     
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['suffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['suffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
     model = ResNet(3, 10).to(device)
     # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)

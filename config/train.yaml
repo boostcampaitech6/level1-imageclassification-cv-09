@@ -1,6 +1,22 @@
 gpu_num : 0
+seed : 111
 train_dir : "/home/hojun/Documents/code/boostcamp_pr1/data/train/images"
 wandb : True
+
+
+# Train / val
+val_size: 0.2
+
+#data
+input_size: [480,256]
+resize_size: [128, 96]
+scaler: clahe
+num_workers: 12
+shuffle: True
+drop_last: False
+batch_size : 64
+mean : [0.485, 0.456, 0.406]
+std : [0.229, 0.224, 0.225]
 
 #Moel
 loss:
@@ -16,7 +32,13 @@ optimizer:
   args:
     lr: 5.0e-04
     weight_decay: 5.0e-02
+scheduler:
+  name: CosineAnnealingLR
+  args:
+    T_max: 100
+    eta_min: 0
 
+#train
 n_epochs: 100
 early_stopping_count : 7
 
