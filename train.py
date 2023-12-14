@@ -178,6 +178,7 @@ if __name__ == "__main__":
         if max_f1_score < valid_f1:
             torch.save(model.state_dict(),os.path.join(log_dir,f'model_{epoch_id}.pth'))
             early_stopping_count = 0
+            max_f1_score = valid_f1
         else:
             early_stopping_count += 1
         
