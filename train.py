@@ -21,11 +21,12 @@ from model.models import ResNet,ResNet1
 from model.models import BasicBlock
 from model.optimizers import get_optimizer
 from model.losses import get_loss_function
+from model.models import get_model
 
 from modules.schedulers import get_scheduler
 from modules.datasets import MaskBaseDataset
 from modules.metrics import get_metric_function
-from modules.utils import load_yaml
+from modules.utils import load_yaml,save_yaml
 from modules.logger import AverageMeter
 
 prj_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,16 +45,17 @@ random.seed(seed)
 import warnings
 warnings.filterwarnings('ignore')
 
-train_serial = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = os.path.join(prj_dir, 'log', train_serial)
 if __name__ == "__main__":
-    os.makedirs(log_dir, exist_ok=True)
+    
+    train_serial = datetime.now().strftime("%Y%m%d_%H%M%S")
+    train_result_dir = os.path.join(prj_dir, 'results', 'train', train_serial)
+    os.makedirs(train_result_dir, exist_ok=True)
     #data dir
     
     # Load config
     config_path = os.path.join(prj_dir, 'config', 'train.yaml')
     config = load_yaml(config_path)
-    shutil.copy(config_path, os.path.join(log_dir,'train.yaml'))
+    shutil.copy(config_path, os.path.join(train_result_dir,'train.yaml'))
     
     data_dir = config['train_dir']
     
@@ -91,7 +93,8 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
-    model = ResNet(3, 10).to(device)
+    model = get_model(config['architecture'])
+    model = model(3, 10).to(device)
     # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)
     wandb.watch(model)
     
@@ -179,7 +182,14 @@ if __name__ == "__main__":
         wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_acc,"train_f1":train_f1, "valid_loss":valid_loss, "valid_acc":valid_acc, "valid_f1":valid_f1})
         
         if max_f1_score < valid_f1:
-            torch.save(model.state_dict(),os.path.join(log_dir,f'model_{epoch_id}.pth'))
+            check_point = {
+            'epoch': epoch_id + 1,
+            'model': model.state_dict(),
+            'optimizer': optimizer.state_dict(),
+            'scheduler': scheduler.state_dict() if scheduler else None}
+            
+            torch.save(check_point,os.path.join(train_result_dir,f'model_{epoch_id}.pt'))
+            torch.save(check_point,os.path.join(train_result_dir,f'best_model.pt'))
             early_stopping_count = 0
             max_f1_score = valid_f1
         else:
