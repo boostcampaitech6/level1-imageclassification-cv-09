@@ -22,6 +22,7 @@ from model.models import BasicBlock
 from model.optimizers import get_optimizer
 from model.losses import get_loss_function
 
+from modules.schedulers import get_scheduler
 from modules.datasets import MaskBaseDataset
 from modules.metrics import get_metric_function
 from modules.utils import load_yaml
@@ -87,8 +88,8 @@ if __name__ == "__main__":
     
     train_dataset, val_dataset = dataset.split_dataset()
     
-    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['suffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
-    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['suffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
     model = ResNet(3, 10).to(device)
     # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)
@@ -97,7 +98,9 @@ if __name__ == "__main__":
     optimizer = get_optimizer(optimizer_str=config['optimizer']['name'])
     optimizer = optimizer(model.parameters(), **config['optimizer']['args'])
     
-    scheduler = StepLR(optimizer, 20, gamma=0.5)
+    scheduler = get_scheduler(scheduler_str=config['scheduler']['name'])
+    scheduler = scheduler(optimizer=optimizer, **config['scheduler']['args'])
+    
     loss_func = get_loss_function(loss_function_str=config['loss']['name'])
     # loss_func = loss_func(**config['loss']['args'])
     # loss_func = loss_func()
