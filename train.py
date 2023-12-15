@@ -61,13 +61,13 @@ if __name__ == "__main__":
     
     #wandb
     if config['wandb']:
-        wandb.init(project="boostcamp_Project1", config={
-                    "learning_rate": 0.0003,
-                    "architecture": "Resnet",
-                    "dataset": "AN",
-                    "notes":"No batchnorm in skipconnection"
+        wandb.init(project=config["wandb_project"], config={
+                    "learning_rate": config['optimizer']['args']['lr'],
+                    "architecture": config['architecture'],
+                    "dataset": "MaskDaset",
+                    "notes":config['wandb_note']
                     },
-                   name = "Focal Loss no maxpooling with no Yes batchnorm yes relu in skipconnection")
+                   name = config['wandb_run'])
     else:
         wandb.init(mode="disabled")
     
