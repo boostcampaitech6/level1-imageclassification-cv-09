@@ -20,12 +20,12 @@ def get_metric_function(metric_function_str):
         return gender_f1Score
     elif metric_function_str == 'age_f1_score':
         return age_f1Score
-    # elif metric_function_str == 'mask_class_f1_score':
-    #     return mask_class_f1Score
-    # elif metric_function_str == 'gender_class_f1_score':
-    #     return gender_class_f1Score
-    # elif metric_function_str == 'age_class_f1_score':
-    #     return age_class_f1Score
+    elif metric_function_str == 'mask_class_f1_score':
+        return mask_class_f1Score
+    elif metric_function_str == 'gender_class_f1_score':
+        return gender_class_f1Score
+    elif metric_function_str == 'age_class_f1_score':
+        return age_class_f1Score
     
 def accuracy(output,target):
     pred_label = torch.argmax(output, 1)
@@ -52,74 +52,75 @@ def mask_f1Score(output,target):
     return data
 
 
-# def mask_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = (pred_label // 6) % 3
-#     target = (target // 6) % 3
-#     target = target.cpu()
-#     return f1_score(pred_label,target, average='macro')
+def mask_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = (pred_label // 6) % 3
+    target = (target // 6) % 3
+    target = target.cpu()
+    return f1_score(pred_label,target, average='macro')
 
 
-# def gender_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = (pred_label // 3) % 2
-#     target = (target // 3) % 2
-#     target = target.cpu()
-#     return f1_score(pred_label,target, average='macro')
+def gender_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = (pred_label // 3) % 2
+    target = (target // 3) % 2
+    target = target.cpu()
+    return f1_score(pred_label,target, average='macro')
 
 
-# def age_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = pred_label % 3
-#     target = target % 3
-#     target = target.cpu()
-#     return f1_score(pred_label,target, average='macro')   
+def age_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = pred_label % 3
+    target = target % 3
+    target = target.cpu()
+    return f1_score(pred_label,target, average='macro')   
 
 
-# def mask_class_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = (pred_label // 6) % 3
-#     target = (target // 6) % 3
-#     target = target.cpu()
-#     arr = [0.,0.,0.]
-#     cnt = [0,0,0]
-#     for i in range(3):
-#         if f1_score(pred_label,target, average="micro", labels=[i]):
-#             arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
-#             cnt[i] += 1
-#         else:
-#             pass
-#     return np.array(arr), np.array(cnt)
+def mask_class_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = (pred_label // 6) % 3
+    target = (target // 6) % 3
+    target = target.cpu()
+    
+    arr = [0.,0.,0.]
+    cnt = [0,0,0]
+    for i in range(3):
+        if f1_score(pred_label,target, average="micro", labels=[i]):
+            arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
+            cnt[i] += 1
+        else:
+            pass
+    return np.array(arr), np.array(cnt)
 
 
-# def gender_class_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = (pred_label // 3) % 2
-#     target = (target // 3) % 2
-#     target = target.cpu()
-#     arr = [0.,0.,0.]
-#     cnt = [0,0,0]
-#     for i in range(2):
-#         if f1_score(pred_label,target, average="micro", labels=[i]):
-#             arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
-#             cnt[i] += 1
-#         else:
-#             pass
-#     return np.array(arr), np.array(cnt)
+def gender_class_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = (pred_label // 3) % 2
+    target = (target // 3) % 2
+    target = target.cpu()
+    arr = [0.,0.,0.]
+    cnt = [0,0,0]
+    for i in range(2):
+        if f1_score(pred_label,target, average="micro", labels=[i]):
+            arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
+            cnt[i] += 1
+        else:
+            pass
+    return np.array(arr), np.array(cnt)
     
 
-# def age_class_f1Score(output,target):
-#     pred_label = torch.argmax(output, 1).cpu()
-#     pred_label = pred_label % 3
-#     target = target % 3
-#     target = target.cpu()
-#     arr = [0.,0.,0.]
-#     cnt = [0,0,0]
-#     for i in range(3):
-#         if f1_score(pred_label,target, average="micro", labels=[i]):
-#             arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
-#             cnt[i] += 1
-#         else:
-#             pass
-#     return np.array(arr), np.array(cnt)
+def age_class_f1Score(output,target):
+    pred_label = torch.argmax(output, 1).cpu()
+    pred_label = pred_label % 3
+    target = target % 3
+    target = target.cpu()
+    arr = [0.,0.,0.]
+    cnt = [0,0,0]
+    for i in range(3):
+        if f1_score(pred_label,target, average="micro", labels=[i]):
+            arr[i] = f1_score(pred_label,target, average="micro", labels=[i])
+            cnt[i] += 1
+        else:
+            pass
+    return np.array(arr), np.array(cnt)
 

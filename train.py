@@ -141,14 +141,12 @@ if __name__ == "__main__":
 
             # Accuracy 계산
             for metric_name, metric_func in metric_funcs.items():
-                # if metric_name in f1_score_lst:
-                #     train_scores[metric_name] += metric_func(pred_value, label) / len(train_dataloader)
-                # elif metric_name in f1_class_score_lst:
-                #     score, cnt = metric_func(pred_value, label)
-                #     train_class_scores[metric_name] += score
-                #     train_class_cnt[metric_name] += cnt
-                if metric_name == "mask_f1_score":
-                    temp = metric_func(pred_value, label)
+                if metric_name in f1_score_lst:
+                    train_scores[metric_name] += metric_func(pred_value, label) / len(train_dataloader)
+                elif metric_name in f1_class_score_lst:
+                    score, cnt = metric_func(pred_value, label)
+                    train_class_scores[metric_name] += score
+                    train_class_cnt[metric_name] += cnt
 
 
             train_loss += loss.item() / len(train_dataloader)
@@ -210,7 +208,13 @@ if __name__ == "__main__":
         print("  valid_mask_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['mask_f1_score'], valid_class_scores['mask_class_f1_score'][0], valid_class_scores['mask_class_f1_score'][1], valid_class_scores['mask_class_f1_score'][2]))
         print("  valid_gender_f1_score %.4f | label_0 %.4f | label_1 %.4f" % (valid_scores['gender_f1_score'], valid_class_scores['gender_class_f1_score'][0], valid_class_scores['gender_class_f1_score'][1]))
         print("  valid_age_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['age_f1_score'], valid_class_scores['age_class_f1_score'][0], valid_class_scores['age_class_f1_score'][1], valid_class_scores['age_class_f1_score'][2]))
-        # wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_scores['acc'],"train_f1":train_scores['f1_score'], "valid_loss":valid_loss, "valid_acc":valid_scores['acc'], "valid_f1":valid_scores['f1_score']})
+        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_scores['acc'],"train_f1":train_scores['f1_score'], "valid_loss":valid_loss, "valid_acc":valid_scores['acc'], "valid_f1":valid_scores['f1_score'],
+                   "train_mask_f1_score":train_scores['mask_f1_score'],"train_mask0_f1_score":train_class_scores['mask_class_f1_score'][0],"train_mask1_f1_score":train_class_scores['mask_class_f1_score'][1],"train_mask2_f1_score":train_class_scores['mask_class_f1_score'][2],
+                   "train_age_f1_score":train_scores['age_f1_score'],"train_age0_f1_score":train_class_scores['age_class_f1_score'][0],"train_age1_f1_score":train_class_scores['age_class_f1_score'][1],"train_age2_f1_score":train_class_scores['age_class_f1_score'][2],
+                   "train_gender_f1_score":train_scores['gender_f1_score'],"train_gender0_f1_score":train_class_scores['gender_class_f1_score'][0],"train_gender1_f1_score":train_class_scores['gender_class_f1_score'][1],
+                   "valid_mask_f1_score":valid_scores['mask_f1_score'],"valid_mask0_f1_score":valid_class_scores['mask_class_f1_score'][0],"valid_mask1_f1_score":valid_class_scores['mask_class_f1_score'][1],"valid_mask2_f1_score":valid_class_scores['mask_class_f1_score'][2],
+                   "valid_age_f1_score":valid_scores['age_f1_score'],"valid_age0_f1_score":valid_class_scores['age_class_f1_score'][0],"valid_age1_f1_score":valid_class_scores['age_class_f1_score'][1],"valid_age2_f1_score":valid_class_scores['age_class_f1_score'][2],
+                   "valid_gender_f1_score":valid_scores['gender_f1_score'],"valid_gender0_f1_score":valid_class_scores['gender_class_f1_score'][0],"valid_gender1_f1_score":valid_class_scores['gender_class_f1_score'][1]})
         
         if max_f1_score < valid_scores['f1_score']:
             check_point = {
