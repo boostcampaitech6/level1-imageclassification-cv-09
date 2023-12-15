@@ -114,15 +114,20 @@ if __name__ == "__main__":
     # loss_func = loss_func(**config['loss']['args'])
     # loss_func = loss_func()
     
-    acc_metric_func = get_metric_function('acc')
-    f1_metric_func = get_metric_function('f1_score')
+    metric_funcs = {metric_name:get_metric_function(metric_name) for metric_name in config['metrics']}
     max_f1_score = 0
-    
+  
     model.train()
+    
+    f1_score_lst = ["acc", "f1_score", "mask_f1_score", "gender_f1_score", "age_f1_score"]
+    f1_class_score_lst = ["mask_class_f1_score", "gender_class_f1_score", "age_class_f1_score"]
     
     for epoch_id in range(config['n_epochs']):
         tic = time()
-        train_loss, train_metric = LossAverageMeter(), MetricAverageMeter()
+        train_loss = 0
+        train_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}
+        train_class_scores = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
+        train_class_cnt = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
         
         for iter, (img, label) in enumerate(tqdm(train_dataloader)):
             img = img.to(device)
@@ -140,20 +145,34 @@ if __name__ == "__main__":
             optimizer.zero_grad()
 
             # Accuracy 계산
-            acc = acc_metric_func(pred_value,label)
-            f1 = f1_metric_func(pred_value,label)
+            for metric_name, metric_func in metric_funcs.items():
+                if metric_name in f1_score_lst:
+                    train_scores[metric_name] += metric_func(pred_value, label) / len(train_dataloader)
+                elif metric_name in f1_class_score_lst:
+                    score, cnt = metric_func(pred_value, label)
+                    train_class_scores[metric_name] += score
+                    train_class_cnt[metric_name] += cnt
+
+
+            train_loss += loss.item() / len(train_dataloader)
             
-            train_loss.update(loss.item(), batch_size)
-            train_metric.update(acc,f1, batch_size)
             
-        train_loss = train_loss.avg
-        train_acc = train_metric.acc_avg
-        train_f1 = train_metric.f1_avg
+            
+        for metric_name, _ in train_class_scores.items():
+            for i in range(3):
+                if train_class_scores[metric_name][i] != 0:
+                    train_class_scores[metric_name][i] = train_class_scores[metric_name][i] / train_class_cnt[metric_name][i]    
+
+            
         
         scheduler.step()
             
         # Validation
-        valid_loss, valid_metric = LossAverageMeter(), MetricAverageMeter()
+        valid_loss = 0
+        valid_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}
+        valid_class_scores = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
+        valid_class_cnt = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
+
         # if (iter % 20 == 0) or (iter == len(qd_train_dataloader)-1):
         model.eval()
         toc = time()
@@ -170,24 +189,39 @@ if __name__ == "__main__":
             loss = loss_func(pred_value, label)
             
             # Accuracy 계산
-            acc = acc_metric_func(pred_value,label)
-            f1 = f1_metric_func(pred_value,label)
+            for metric_name, metric_func in metric_funcs.items():
+                if metric_name in f1_score_lst:
+                    valid_scores[metric_name] += metric_func(pred_value, label) / len(val_dataloader)
+                elif metric_name in f1_class_score_lst:
+                    score, cnt = metric_func(pred_value, label)
+                    valid_class_scores[metric_name] += score
+                    valid_class_cnt[metric_name] += cnt
+                        
+            valid_loss += loss.item() / len(val_dataloader)
             
-                    
-            valid_loss.update(loss.item(), batch_size)
-            valid_metric.update(acc, f1, batch_size)
-            
-        valid_loss = valid_loss.avg
-        valid_acc = valid_metric.acc_avg
-        valid_f1 = valid_metric.f1_avg
-        
+        for metric_name, _ in valid_class_scores.items():
+            for i in range(3):
+                if valid_class_scores[metric_name][i] != 0:
+                    valid_class_scores[metric_name][i] = valid_class_scores[metric_name][i] / valid_class_cnt[metric_name][i]    
         # print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Valid Loss %.4f | Valid Acc %.4f" %
         #     (epoch_id, config['n_epochs'], train_loss, train_acc, valid_loss, valid_acc))
         print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Train F1 %.4f | Valid Loss %.4f | Valid Acc %.4f | Valid F1 %.4f"  %
-            (epoch_id, config['n_epochs'], train_loss, train_acc, train_f1, valid_loss, valid_acc, valid_f1))
-        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_acc,"train_f1":train_f1, "valid_loss":valid_loss, "valid_acc":valid_acc, "valid_f1":valid_f1})
+            (epoch_id, config['n_epochs'], train_loss, train_scores['acc'], train_scores['f1_score'], valid_loss, valid_scores['acc'], valid_scores['f1_score']))
+        print("  train_mask_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (train_scores['mask_f1_score'], train_class_scores['mask_class_f1_score'][0], train_class_scores['mask_class_f1_score'][1], train_class_scores['mask_class_f1_score'][2]))
+        print("  train_gender_f1_score %.4f | label_0 %.4f | label_1 %.4f" % (train_scores['gender_f1_score'], train_class_scores['gender_class_f1_score'][0], train_class_scores['gender_class_f1_score'][1]))
+        print("  train_age_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (train_scores['age_f1_score'], train_class_scores['age_class_f1_score'][0], train_class_scores['age_class_f1_score'][1], train_class_scores['age_class_f1_score'][2]))
+        print("  valid_mask_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['mask_f1_score'], valid_class_scores['mask_class_f1_score'][0], valid_class_scores['mask_class_f1_score'][1], valid_class_scores['mask_class_f1_score'][2]))
+        print("  valid_gender_f1_score %.4f | label_0 %.4f | label_1 %.4f" % (valid_scores['gender_f1_score'], valid_class_scores['gender_class_f1_score'][0], valid_class_scores['gender_class_f1_score'][1]))
+        print("  valid_age_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['age_f1_score'], valid_class_scores['age_class_f1_score'][0], valid_class_scores['age_class_f1_score'][1], valid_class_scores['age_class_f1_score'][2]))
+        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_scores['acc'],"train_f1":train_scores['f1_score'], "valid_loss":valid_loss, "valid_acc":valid_scores['acc'], "valid_f1":valid_scores['f1_score'],
+                   "train_mask_f1_score":train_scores['mask_f1_score'],"train_mask0_f1_score":train_class_scores['mask_class_f1_score'][0],"train_mask1_f1_score":train_class_scores['mask_class_f1_score'][1],"train_mask2_f1_score":train_class_scores['mask_class_f1_score'][2],
+                   "train_age_f1_score":train_scores['age_f1_score'],"train_age0_f1_score":train_class_scores['age_class_f1_score'][0],"train_age1_f1_score":train_class_scores['age_class_f1_score'][1],"train_age2_f1_score":train_class_scores['age_class_f1_score'][2],
+                   "train_gender_f1_score":train_scores['gender_f1_score'],"train_gender0_f1_score":train_class_scores['gender_class_f1_score'][0],"train_gender1_f1_score":train_class_scores['gender_class_f1_score'][1],
+                   "valid_mask_f1_score":valid_scores['mask_f1_score'],"valid_mask0_f1_score":valid_class_scores['mask_class_f1_score'][0],"valid_mask1_f1_score":valid_class_scores['mask_class_f1_score'][1],"valid_mask2_f1_score":valid_class_scores['mask_class_f1_score'][2],
+                   "valid_age_f1_score":valid_scores['age_f1_score'],"valid_age0_f1_score":valid_class_scores['age_class_f1_score'][0],"valid_age1_f1_score":valid_class_scores['age_class_f1_score'][1],"valid_age2_f1_score":valid_class_scores['age_class_f1_score'][2],
+                   "valid_gender_f1_score":valid_scores['gender_f1_score'],"valid_gender0_f1_score":valid_class_scores['gender_class_f1_score'][0],"valid_gender1_f1_score":valid_class_scores['gender_class_f1_score'][1]})
         
-        if max_f1_score < valid_f1:
+        if max_f1_score < valid_scores['f1_score']:
             check_point = {
             'epoch': epoch_id + 1,
             'model': model.state_dict(),
@@ -197,7 +231,7 @@ if __name__ == "__main__":
             torch.save(check_point,os.path.join(train_result_dir,f'model_{epoch_id}.pt'))
             torch.save(check_point,os.path.join(train_result_dir,f'best_model.pt'))
             early_stopping_count = 0
-            max_f1_score = valid_f1
+            max_f1_score = valid_scores['f1_score']
         else:
             early_stopping_count += 1
         
