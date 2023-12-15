@@ -94,7 +94,8 @@ if __name__ == "__main__":
     val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
     model = get_model(config['architecture'])
-    model = model(3, 10).to(device)
+    model = model.to(device)
+    # model = model(3, 10).to(device)
     # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)
     wandb.watch(model)
     
