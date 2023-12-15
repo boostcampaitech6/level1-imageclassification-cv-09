@@ -13,9 +13,8 @@ def get_model(model_str: str):
     """
     if model_str == 'resnet':
         return ResNet
-    else:
-        print(model_str)
-        return timm.create_model(model_str,pretrained=True)
+    elif model_str == "efficientnet_b3a":
+        return timm.create_model
     
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
