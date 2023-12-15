@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import timm
 
 def get_model(model_str: str):
     """모델 클래스 변수 설정
@@ -12,6 +13,9 @@ def get_model(model_str: str):
     """
     if model_str == 'resnet':
         return ResNet
+    else:
+        print(model_str)
+        return timm.create_model(model_str,pretrained=True)
     
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
