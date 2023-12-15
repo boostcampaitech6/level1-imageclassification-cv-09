@@ -60,9 +60,15 @@ if __name__ == '__main__':
                                 shuffle=False,
                                 drop_last=False)
     
-    model = get_model(model_str=train_config['architecture'])
-    model = model(3,10).to(device)
-    print(f"Load model architecture: {train_config['architecture']}")
+    if train_config['model_custom']:
+        model = get_model(train_config['model']['architecture'])
+        model = model(**train_config['model']['args'])
+    else:
+        model = get_model(train_config['model']['architecture'])
+        model = model(train_config['model']['architecture'], **train_config['model']['args'])
+    model = model.to(device)
+    
+    print(f"Load model architecture: {train_config['model']['architecture']}")
     
     check_point_path = os.path.join(prj_dir, 'results', 'train', config['train_serial'], 'best_model.pt')
     check_point = torch.load(check_point_path,map_location=torch.device("cpu"))
