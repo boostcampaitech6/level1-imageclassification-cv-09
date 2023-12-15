@@ -120,7 +120,7 @@ class MaskBaseDataset(Dataset):
         transform=None,
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
-        val_ratio=0.2,
+        val_ratio = 0.2,
     ):
         self.data_dir = data_dir
         self.mean = mean
@@ -169,7 +169,7 @@ class MaskBaseDataset(Dataset):
             )
             sums = []
             squared = []
-            for image_path in self.image_paths[:3000]:
+            for image_path in self.image_paths[:]:
                 image = np.array(Image.open(image_path)).astype(np.int32)
                 sums.append(image.mean(axis=(0, 1)))
                 squared.append((image**2).mean(axis=(0, 1)))

@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 import wandb
 
-from model.models import ResNet,ResNet1
+from model.models import ResNet
 from model.models import BasicBlock
 from model.optimizers import get_optimizer
 from model.losses import get_loss_function
@@ -120,11 +120,11 @@ if __name__ == "__main__":
     
     model.train()
     
-    for epoch_id in range(config['n_epochs']):
+    for epoch_id in tqdm(range(config['n_epochs'])):
         tic = time()
         train_loss, train_metric = LossAverageMeter(), MetricAverageMeter()
         
-        for iter, (img, label) in enumerate(tqdm(train_dataloader)):
+        for iter, (img, label) in enumerate(train_dataloader):
             img = img.to(device)
             label = label.to(device)
             
