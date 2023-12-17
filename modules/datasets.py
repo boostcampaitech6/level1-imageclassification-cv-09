@@ -331,6 +331,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         weight = 1. / class_sample_count
 								  
         samples_weight = np.array([weight[t] for t in multi_class])
+        samples_weight = torch.from_numpy(samples_weight).double()
         phase_sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         return phase_sampler
 
