@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, Subset, random_split
+from torch.utils.data import Dataset, Subset, random_split, WeightedRandomSampler
 from torchvision.transforms import (
     Resize,
     ToTensor,
@@ -316,6 +316,23 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
     def split_dataset(self) -> List[Subset]:
         """프로필 기준으로 나눈 데이터셋을 Subset 리스트로 반환하는 메서드"""
         return [Subset(self, indices) for phase, indices in self.indices.items()]
+    
+    
+    # Data Imbalance를 해결하기 위해 WeightedRandomSampler 사용
+    def get_sampler(self, phase) :
+        multi_class = []
+        for phase_idx in self.indices[phase]:
+            temp = self.encode_multi_class(self.mask_labels[phase_idx],
+                                    self.gender_labels[phase_idx],
+                                    self.age_labels[phase_idx])
+            multi_class.append(temp)
+       
+        class_sample_count = np.array([len(np.where(multi_class == t)[0]) for t in np.unique(multi_class)])		   
+        weight = 1. / class_sample_count
+								  
+        samples_weight = np.array([weight[t] for t in multi_class])
+        phase_sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        return phase_sampler
 
 
 class TestDataset(Dataset):

@@ -24,7 +24,7 @@ from model.losses import get_loss_function
 from model.models import get_model
 
 from modules.schedulers import get_scheduler
-from modules.datasets import MaskBaseDataset
+from modules.datasets import MaskBaseDataset, MaskSplitByProfileDataset
 from modules.metrics import get_metric_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
@@ -85,13 +85,16 @@ if __name__ == "__main__":
     ])
 
     
-    dataset = MaskBaseDataset(data_dir, transform,val_ratio=config['val_size'])
-    num_classes = MaskBaseDataset.num_classes
+    dataset = MaskSplitByProfileDataset(data_dir, transform,val_ratio=config['val_size'])
+    num_classes = MaskSplitByProfileDataset.num_classes
     
     train_dataset, val_dataset = dataset.split_dataset()
     
-    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
-    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+    train_sampler = dataset.get_sampler('train')
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=train_sampler)
+    
+    valid_sampler = dataset.get_sampler('val')
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=valid_sampler)
     
     if config['model_custom']:
         model = get_model(config['model']['architecture'])
