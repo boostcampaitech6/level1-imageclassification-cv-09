@@ -21,6 +21,36 @@ def get_model(model_str: str):
         return pre_ResNet34
     elif model_str == 'pre_resnet50':
         return pre_ResNet50
+    elif model_str == 'eifficientnet_b3':
+        return Efficientnet_b3
+    elif model_str == 'eifficientnet_b4':
+        return Efficientnet_b4
+    elif model_str == 'eifficientnet_b5':
+        return Efficientnet_b5
+    elif model_str == 'eifficientnet_b6':
+        return Efficientnet_b6
+    elif model_str == 'convnext_base':
+        return ConvNext_base
+    elif model_str == 'convnext_large':
+        return ConvNext_large 
+    elif model_str == 'vit_b_16':
+        return ViT_B_16  
+    elif model_str == 'swintransformer_t':
+        return SwinTransformer_t      
+    elif model_str == 'swintransformer_b':
+        return SwinTransformer_b     
+    elif model_str == 'mobilenet_v3_small':
+        return Mobilenet_v3_S     
+    elif model_str == 'mobilenet_v3_large':
+        return Mobilenet_v3_L     
+    elif model_str == 'mobileone_s4':
+        return Mobileone_s4  
+    elif model_str == 'coatnet_0_rw_224':
+        return CoAtnet_rw_224      
+    elif model_str == 'tinynet_c':
+        return TinyNet_c  
+    elif model_str == 'tinynet_e':
+        return TinyNet_E  
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
@@ -214,4 +244,290 @@ class pre_ResNet50(nn.Module):
         x = self.model(x)
         x = self.linear(x)
 
+        return x
+    
+
+class pre_ResNet50(nn.Module):
+    def __init__(self, num_classes):
+        super(pre_ResNet50, self).__init__()
+        
+        self.model = models.resnet50(pretrained=True)
+
+        pre_layer = self.model.fc.in_features
+        self.model.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+    
+
+class Efficientnet_b4(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b4, self).__init__()
+        
+        self.model = models.efficientnet_b4(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+
+class Efficientnet_b3(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b3, self).__init__()
+        
+        self.model = models.efficientnet_b3(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+    
+class Efficientnet_b5(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b5, self).__init__()
+        
+        self.model = models.efficientnet_b5(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+class Efficientnet_b6(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b6, self).__init__()
+        
+        self.model = models.efficientnet_b6(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+
+class ConvNext_base(nn.Module):
+    def __init__(self, num_classes):
+        super(ConvNext_base, self).__init__()
+        
+        self.model = models.convnext_base(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.LayerNorm([pre_layer]),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = x.view(x.size(0), -1)        
+        x = self.linear(x)
+        return x
+
+
+class ConvNext_large(nn.Module):
+    def __init__(self, num_classes):
+        super(ConvNext_large, self).__init__()
+        
+        self.model = models.convnext_large(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.LayerNorm([pre_layer]),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = x.view(x.size(0), -1)        
+        x = self.linear(x)
+        return x
+
+class ViT_B_16(nn.Module):
+    def __init__(self, num_classes):
+        super(ViT_B_16, self).__init__()
+        
+        self.model = models.vit_b_16(pretrained=True)
+        pre_layer = self.model.heads[-1].in_features
+        self.model.heads = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+
+class SwinTransformer_b(nn.Module):
+    def __init__(self, num_classes):
+        super(SwinTransformer_b, self).__init__()
+        
+        self.model = models.swin_b(pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class SwinTransformer_t(nn.Module):
+    def __init__(self, num_classes):
+        super(SwinTransformer_t, self).__init__()
+        
+        self.model = models.swin_t(pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+
+class Mobilenet_v3_L(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobilenet_v3_L, self).__init__()
+        
+        self.model = models.mobilenet_v3_large(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier[-1] = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+class Mobilenet_v3_S(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobilenet_v3_S, self).__init__()
+        
+        self.model = models.mobilenet_v3_small(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier[-1] = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x 
+
+
+class Mobileone_s4(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobileone_s4, self).__init__()
+        
+        self.model = timm.create_model("mobileone_s4", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+
+class CoAtnet_rw_224(nn.Module):
+    def __init__(self, num_classes):
+        super(CoAtnet_rw_224, self).__init__()
+        
+        self.model = timm.create_model("coatnet_0_rw_224", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class TinyNet_c(nn.Module):
+    def __init__(self, num_classes):
+        super(TinyNet_c, self).__init__()
+        
+        self.model = timm.create_model("tinynet_c", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+class TinyNet_E(nn.Module):
+    def __init__(self, num_classes):
+        super(TinyNet_E, self).__init__()
+        
+        self.model = timm.create_model("tinynet_e", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
         return x
