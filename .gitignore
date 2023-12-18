@@ -1,0 +1,8 @@
+__pycache__
+*.png
+*.jpg
+data
+wandb
+log
+nohup.out
+results
