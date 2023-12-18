@@ -15,6 +15,9 @@ from enum import Enum
 from PIL import Image
 import os,random
 
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
 # 지원되는 이미지 확장자 리스트
 IMG_EXTENSIONS = [
     ".jpg",
@@ -278,11 +281,53 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         train_indices = set(range(length)) - val_indices
         return {"train": train_indices, "val": val_indices}
 
+    # train set과 valid set을 비슷한 클래스 비율로 나눔
+    def balanced_split_profile(self, profiles, val_ratio):
+        df = pd.DataFrame()
+        
+        profiles = os.listdir(self.data_dir)
+        profiles = [profile for profile in profiles if not profile.startswith(".")]
+        
+        df["path"] = profiles
+        
+        multi_labels = []
+        gender_labels = []
+        age_labels = []
+        
+        for profile in profiles:
+            id, gender, race, age = profile.split("_")
+            gender_label = GenderLabels.from_str(gender)
+            age_label = AgeLabels.from_number(age)
+
+            gender_labels.append(gender_label)
+            age_labels.append(age_label)
+
+        for i in range(len(profiles)):
+            multi_labels.append(gender_labels[i] * 3 + age_labels[i])
+            
+        df["multi_label"] = multi_labels
+        df["gender_label"] = gender_labels
+        df["age_label"] = age_labels
+                
+        train, val =  train_test_split(
+            df,
+            test_size=val_ratio,
+            random_state=42,
+            stratify=df["multi_label"]
+        )
+        
+        train_indices = set(list(train.index))
+        val_indices = set(list(val.index))
+
+        return {"train": train_indices, "val": val_indices}
+                
+        
     def setup(self):
         """데이터셋 설정을 하는 메서드. 프로필 기준으로 나눈다."""
         profiles = os.listdir(self.data_dir)
         profiles = [profile for profile in profiles if not profile.startswith(".")]
-        split_profiles = self._split_profile(profiles, self.val_ratio)
+        # split_profiles = self._split_profile(profiles, self.val_ratio)
+        split_profiles = self.balanced_split_profile(profiles, self.val_ratio)
 
         cnt = 0
         for phase, indices in split_profiles.items():
