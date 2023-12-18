@@ -119,14 +119,10 @@ if __name__ == "__main__":
   
     model.train()
     
-<<<<<<< HEAD
-    for epoch_id in tqdm(range(config['n_epochs'])):
-=======
     f1_score_lst = ["acc", "f1_score", "mask_f1_score", "gender_f1_score", "age_f1_score"]
     f1_class_score_lst = ["mask_class_f1_score", "gender_class_f1_score", "age_class_f1_score"]
     
-    for epoch_id in range(config['n_epochs']):
->>>>>>> b7b63591adcffc9c834ffe8450abf360edf6304a
+    for epoch_id in tqdm(range(config['n_epochs'])):
         tic = time()
         train_loss = 0
         train_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}

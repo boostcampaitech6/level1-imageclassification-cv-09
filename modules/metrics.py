@@ -39,17 +39,17 @@ def f1Score(output,target):
     return f1_score(pred_label,target, average='macro')
 
 
-def mask_f1Score(output,target):
-    labels = ["class 0", "class 1", "class 2"]
-    pred_label = torch.argmax(output, 1).cpu()
-    pred_label = (pred_label // 6) % 3
-    target = (target // 6) % 3
-    target = target.cpu()
+# def mask_f1Score(output,target):
+#     labels = ["class 0", "class 1", "class 2"]
+#     pred_label = torch.argmax(output, 1).cpu()
+#     pred_label = (pred_label // 6) % 3
+#     target = (target // 6) % 3
+#     target = target.cpu()
     
-    data = classification_report(target, pred_label, target_names=labels)
+#     data = classification_report(target, pred_label, target_names=labels)
     
     
-    return data
+#     return data
 
 
 def mask_f1Score(output,target):

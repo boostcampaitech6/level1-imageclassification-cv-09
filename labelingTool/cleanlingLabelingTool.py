@@ -1,6 +1,7 @@
 from tkinter import *
 import os
 from PIL import Image, ImageDraw, ImageFont,ImageTk
+from tkinter import simpledialog
 import pandas as pd
 import csv
 
@@ -55,6 +56,7 @@ class windows_tkinter:
         self.mask_label['text'] = mask_name
         self.age_label['text'] = age_str[self.train_csv.iloc[self.start_number][4]//30]+f" {self.train_csv.iloc[self.start_number][4]}살"
         self.gender_label['text'] = gender_str[self.train_csv.iloc[self.current_number][2]]
+        self.id_label['text'] = "id : " + str(self.train_csv.iloc[self.current_number][0])
         
             
         
@@ -112,7 +114,9 @@ class windows_tkinter:
         
         self.error_button = Button(self.window,text="Error",command=lambda ccdx = "Error":self.button_flag(ccdx))
         self.error_button.place(relx = 0.65,rely=0.67,relheight=0.15, relwidth=0.22)
-
+        
+        self.id_label = Label(self.window,text="id : "+str(self.train_csv.iloc[self.start_number][0]),width = int(self.image_size*0.225),height=int(self.image_size*0.1),font=('나눔바른펜',int(self.image_size*0.11)),bg=BTN_COLOR)
+        self.id_label.place(relx=0.025,rely=0.88,relheight=0.1,relwidth=0.1)
 
         self.window.mainloop()
 
@@ -121,5 +125,12 @@ class windows_tkinter:
 if __name__ == "__main__":
     data_path = "./data"
     train_mask_path = "./data/train_mask.csv"
-    ss = windows_tkinter(start_number=0,train_csv_path=train_mask_path,train_check_path=os.path.join(data_path,"train_check.csv"),data_path = data_path,image_size=100)
-    ss.display_window()
+    
+    root = Tk()
+    root.withdraw()  # 메인 윈도우 숨기기
+    user_input = simpledialog.askinteger("Input", "Enter a number", parent=root)
+    root.destroy()
+
+    if user_input is not None:
+        ss = windows_tkinter(start_number=0,train_csv_path=train_mask_path,train_check_path=os.path.join(data_path,"train_check.csv"),data_path = data_path,image_size=100)
+        ss.display_window()
