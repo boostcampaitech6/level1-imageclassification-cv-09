@@ -26,6 +26,7 @@ from model.models import get_model
 from modules.schedulers import get_scheduler
 from modules.datasets import MaskBaseDataset, MaskSplitByProfileDataset
 from modules.metrics import get_metric_function
+from modules.datasets import get_dataset_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
 
@@ -83,18 +84,30 @@ if __name__ == "__main__":
     transforms.Normalize(mean=config['mean'],
                         std=config['std'])
     ])
+    if config['dataset'] == "baseDataset":
+        dataset =get_dataset_function(config['dataset'])
+        dataset = dataset(data_dir, transform,val_ratio=config['val_size'])
+        
+        train_dataset, val_dataset = dataset.split_dataset()
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
+        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
+    else:
+        dataset =get_dataset_function(config['dataset'])
+        dataset = dataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
+        
+        train_dataset, val_dataset = dataset.split_dataset()
+        
+        train_sampler = dataset.get_sampler('train')
+        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=train_sampler)
+    
+        valid_sampler = dataset.get_sampler('val')
+        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=valid_sampler)
+        
+        
+    num_classes = dataset.num_classes
 
-    
-    dataset = MaskSplitByProfileDataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
-    num_classes = MaskSplitByProfileDataset.num_classes
-    
-    train_dataset, val_dataset = dataset.split_dataset()
-    
-    train_sampler = dataset.get_sampler('train')
-    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=train_sampler)
-    
-    valid_sampler = dataset.get_sampler('val')
-    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=valid_sampler)
+
     
     if config['model_custom']:
         model = get_model(config['model']['architecture'])

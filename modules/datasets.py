@@ -18,6 +18,13 @@ import os,random
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
+def get_dataset_function(dataset_function_str):
+    if dataset_function_str == "baseDataset":
+        return MaskBaseDataset
+    elif dataset_function_str == "SplitByProfileDataset_weightSampler_stratify":
+        return MaskSplitByProfileDataset
+
+
 # 지원되는 이미지 확장자 리스트
 IMG_EXTENSIONS = [
     ".jpg",
