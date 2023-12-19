@@ -267,8 +267,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
         val_ratio=0.2,
+        seed = 42
     ):
         self.indices = defaultdict(list)
+        self.seed = seed
         super().__init__(data_dir, mean, std, val_ratio)
 
     @staticmethod
@@ -312,7 +314,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         train, val =  train_test_split(
             df,
             test_size=val_ratio,
-            random_state=42,
+            random_state=self.seed,
             stratify=df["multi_label"]
         )
         

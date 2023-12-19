@@ -32,16 +32,6 @@ from modules.logger import MetricAverageMeter,LossAverageMeter
 prj_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(prj_dir)
 
-seed = 111
-
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)  # if use multi-GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(seed)
-random.seed(seed)
-
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -58,6 +48,16 @@ if __name__ == "__main__":
     shutil.copy(config_path, os.path.join(train_result_dir,'train.yaml'))
     
     data_dir = config['train_dir']
+    
+    
+    #seed
+    torch.manual_seed(config['seed'])
+    torch.cuda.manual_seed(config['seed'])
+    torch.cuda.manual_seed_all(config['seed'])  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(config['seed'])
+    random.seed(config['seed'])
     
     #wandb
     if config['wandb']:
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     ])
 
     
-    dataset = MaskSplitByProfileDataset(data_dir, transform,val_ratio=config['val_size'])
+    dataset = MaskSplitByProfileDataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
     num_classes = MaskSplitByProfileDataset.num_classes
     
     train_dataset, val_dataset = dataset.split_dataset()
