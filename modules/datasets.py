@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, Subset, random_split
+from torch.utils.data import Dataset, Subset, random_split, WeightedRandomSampler
 from torchvision.transforms import (
     Resize,
     ToTensor,
@@ -14,6 +14,16 @@ from typing import Tuple, List
 from enum import Enum
 from PIL import Image
 import os,random
+
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+def get_dataset_function(dataset_function_str):
+    if dataset_function_str == "baseDataset":
+        return MaskBaseDataset
+    elif dataset_function_str == "SplitByProfileDataset_weightSampler_stratify":
+        return MaskSplitByProfileDataset
+
 
 # 지원되는 이미지 확장자 리스트
 IMG_EXTENSIONS = [
@@ -264,8 +274,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
         val_ratio=0.2,
+        seed = 42
     ):
         self.indices = defaultdict(list)
+        self.seed = seed
         super().__init__(data_dir, mean, std, val_ratio)
 
     @staticmethod
@@ -278,11 +290,53 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         train_indices = set(range(length)) - val_indices
         return {"train": train_indices, "val": val_indices}
 
+    # train set과 valid set을 비슷한 클래스 비율로 나눔
+    def balanced_split_profile(self, profiles, val_ratio):
+        df = pd.DataFrame()
+        
+        profiles = os.listdir(self.data_dir)
+        profiles = [profile for profile in profiles if not profile.startswith(".")]
+        
+        df["path"] = profiles
+        
+        multi_labels = []
+        gender_labels = []
+        age_labels = []
+        
+        for profile in profiles:
+            id, gender, race, age = profile.split("_")
+            gender_label = GenderLabels.from_str(gender)
+            age_label = AgeLabels.from_number(age)
+
+            gender_labels.append(gender_label)
+            age_labels.append(age_label)
+
+        for i in range(len(profiles)):
+            multi_labels.append(gender_labels[i] * 3 + age_labels[i])
+            
+        df["multi_label"] = multi_labels
+        df["gender_label"] = gender_labels
+        df["age_label"] = age_labels
+                
+        train, val =  train_test_split(
+            df,
+            test_size=val_ratio,
+            random_state=self.seed,
+            stratify=df["multi_label"]
+        )
+        
+        train_indices = set(list(train.index))
+        val_indices = set(list(val.index))
+
+        return {"train": train_indices, "val": val_indices}
+                
+        
     def setup(self):
         """데이터셋 설정을 하는 메서드. 프로필 기준으로 나눈다."""
         profiles = os.listdir(self.data_dir)
         profiles = [profile for profile in profiles if not profile.startswith(".")]
-        split_profiles = self._split_profile(profiles, self.val_ratio)
+        # split_profiles = self._split_profile(profiles, self.val_ratio)
+        split_profiles = self.balanced_split_profile(profiles, self.val_ratio)
 
         cnt = 0
         for phase, indices in split_profiles.items():
@@ -316,6 +370,24 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
     def split_dataset(self) -> List[Subset]:
         """프로필 기준으로 나눈 데이터셋을 Subset 리스트로 반환하는 메서드"""
         return [Subset(self, indices) for phase, indices in self.indices.items()]
+    
+    
+    # Data Imbalance를 해결하기 위해 WeightedRandomSampler 사용
+    def get_sampler(self, phase) :
+        multi_class = []
+        for phase_idx in self.indices[phase]:
+            temp = self.encode_multi_class(self.mask_labels[phase_idx],
+                                    self.gender_labels[phase_idx],
+                                    self.age_labels[phase_idx])
+            multi_class.append(temp)
+       
+        class_sample_count = np.array([len(np.where(multi_class == t)[0]) for t in np.unique(multi_class)])		   
+        weight = 1. / class_sample_count
+								  
+        samples_weight = np.array([weight[t] for t in multi_class])
+        samples_weight = torch.from_numpy(samples_weight).double()
+        phase_sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        return phase_sampler
 
 
 class TestDataset(Dataset):
