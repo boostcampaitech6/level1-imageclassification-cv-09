@@ -479,9 +479,6 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
     def balanced_split_profile(self, profiles, val_ratio):
         df = pd.DataFrame()
         
-        profiles = os.listdir(self.data_dir)
-        profiles = [profile for profile in profiles if not profile.startswith(".")]
-        
         df["path"] = profiles
         
         multi_labels = []
