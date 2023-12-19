@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import timm
+import torchvision.models as models
+
 
 def get_model(model_str: str):
     """모델 클래스 변수 설정
@@ -13,17 +15,49 @@ def get_model(model_str: str):
     """
     if model_str == 'resnet':
         return ResNet
-    else:
-        print(model_str)
-        return timm.create_model(model_str,pretrained=True)
-    
+    elif model_str == "efficientnet_b3a":
+        return timm.create_model
+    elif model_str == 'pre_resnet34':
+        return pre_ResNet34
+    elif model_str == 'pre_resnet50':
+        return pre_ResNet50
+    elif model_str == 'eifficientnet_b3':
+        return Efficientnet_b3
+    elif model_str == 'eifficientnet_b4':
+        return Efficientnet_b4
+    elif model_str == 'eifficientnet_b5':
+        return Efficientnet_b5
+    elif model_str == 'eifficientnet_b6':
+        return Efficientnet_b6
+    elif model_str == 'convnext_base':
+        return ConvNext_base
+    elif model_str == 'convnext_large':
+        return ConvNext_large 
+    elif model_str == 'vit_b_16':
+        return ViT_B_16  
+    elif model_str == 'swintransformer_t':
+        return SwinTransformer_t      
+    elif model_str == 'swintransformer_b':
+        return SwinTransformer_b     
+    elif model_str == 'mobilenet_v3_small':
+        return Mobilenet_v3_S     
+    elif model_str == 'mobilenet_v3_large':
+        return Mobilenet_v3_L     
+    elif model_str == 'mobileone_s4':
+        return Mobileone_s4  
+    elif model_str == 'coatnet_0_rw_224':
+        return CoAtnet_rw_224      
+    elif model_str == 'tinynet_c':
+        return TinyNet_c  
+    elif model_str == 'tinynet_e':
+        return TinyNet_E  
+
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
         super().__init__()
 
         layers = []
         
-
         ##fill it##
         layers.append(nn.Conv2d(in_channels=in_channels, out_channels=out_channels,kernel_size=kernel_size,stride=stride,padding=padding,bias=bias))
         if norm == "bnorm":
@@ -32,8 +66,6 @@ class ConvBlock(nn.Module):
         if relu:
             layers.append(nn.ReLU())
         self.conv = nn.Sequential(*layers)
-        
-
 
     def forward(self, x):
 
@@ -55,7 +87,6 @@ class ResBlock(nn.Module):
         else:
           init_stride = stride
 
-        ##fill##
         # print(in_channels, out_channels, kernel_size, init_stride, padding, bias, norm,relu)
         layers.append(ConvBlock(in_channels, out_channels, kernel_size, init_stride, padding, bias, norm,relu))
         layers.append(ConvBlock(out_channels, out_channels, kernel_size, stride, padding, bias, norm,False))
@@ -74,7 +105,6 @@ class ResBlock(nn.Module):
 
     def forward(self, x, short_cut=False):
 
-        ##fill##
         ##Residual Block의 Input과 Output의 Channel Dimension이 서로 다른 경우, Projection shortcut connection을 이용하여 차원을 맞춰주세요.##
         if short_cut:
           return F.relu(self.short_cut(x) + self.resblk(x))
@@ -94,9 +124,6 @@ class ResNet(nn.Module):
         self.enc = ConvBlock(in_channels, nker, kernel_size=7, stride=2, padding=1, bias=True, norm=None, relu=True)
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        
-        
-        ##fill##
         kener_size =3
         stride = 1
         padding = 1
@@ -174,50 +201,333 @@ class BasicBlock(nn.Module):
 
         return out
 
-class ResNet1(nn.Module):
-    def __init__(self, block, layers, num_classes=1000):
-        super(ResNet1, self).__init__()
-        self.in_channels = 64
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU(inplace=True)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+        
+    def forward(self, x):
+        return x
+    
 
-    def _make_layer(self, block, out_channels, blocks, stride=1):
-        downsample = None
-        if stride != 1 or self.in_channels != out_channels * block.expansion:
-            downsample = nn.Sequential(
-                nn.Conv2d(self.in_channels, out_channels * block.expansion, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels * block.expansion),
-            )
+class pre_ResNet34(nn.Module):
+    def __init__(self, num_classes):
+        super(pre_ResNet34, self).__init__()
+        
+        self.model = models.resnet34(pretrained=True)
 
-        layers = []
-        layers.append(block(self.in_channels, out_channels, stride, downsample))
-        self.in_channels = out_channels * block.expansion
-        for _ in range(1, blocks):
-            layers.append(block(self.in_channels, out_channels))
+        pre_layer = self.model.fc.in_features
+        self.model.fc = Identity()
 
-        return nn.Sequential(*layers)
+        self.linear = nn.Linear(pre_layer, num_classes)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        
+        x = self.model(x)
+        x = self.linear(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        return x
+    
 
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.fc(x)
+class pre_ResNet50(nn.Module):
+    def __init__(self, num_classes):
+        super(pre_ResNet50, self).__init__()
+        
+        self.model = models.resnet50(pretrained=True)
 
+        pre_layer = self.model.fc.in_features
+        self.model.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+    
+
+class pre_ResNet50(nn.Module):
+    def __init__(self, num_classes):
+        super(pre_ResNet50, self).__init__()
+        
+        self.model = models.resnet50(pretrained=True)
+
+        pre_layer = self.model.fc.in_features
+        self.model.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+    
+
+class Efficientnet_b4(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b4, self).__init__()
+        
+        self.model = models.efficientnet_b4(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+
+class Efficientnet_b3(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b3, self).__init__()
+        
+        self.model = models.efficientnet_b3(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+    
+class Efficientnet_b5(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b5, self).__init__()
+        
+        self.model = models.efficientnet_b5(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+class Efficientnet_b6(nn.Module):
+    def __init__(self, num_classes):
+        super(Efficientnet_b6, self).__init__()
+        
+        self.model = models.efficientnet_b6(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        
+        x = self.model(x)
+        x = self.linear(x)
+
+        return x
+
+
+class ConvNext_base(nn.Module):
+    def __init__(self, num_classes):
+        super(ConvNext_base, self).__init__()
+        
+        self.model = models.convnext_base(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.LayerNorm([pre_layer]),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = x.view(x.size(0), -1)        
+        x = self.linear(x)
+        return x
+
+
+class ConvNext_large(nn.Module):
+    def __init__(self, num_classes):
+        super(ConvNext_large, self).__init__()
+        
+        self.model = models.convnext_large(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Sequential(
+            nn.LayerNorm([pre_layer]),
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = x.view(x.size(0), -1)        
+        x = self.linear(x)
+        return x
+
+class ViT_B_16(nn.Module):
+    def __init__(self, num_classes):
+        super(ViT_B_16, self).__init__()
+        
+        self.model = models.vit_b_16(pretrained=True)
+        pre_layer = self.model.heads[-1].in_features
+        self.model.heads = Identity()
+
+        self.linear = nn.Sequential(
+            nn.Linear(pre_layer, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+
+class SwinTransformer_b(nn.Module):
+    def __init__(self, num_classes):
+        super(SwinTransformer_b, self).__init__()
+        
+        self.model = models.swin_b(pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class SwinTransformer_t(nn.Module):
+    def __init__(self, num_classes):
+        super(SwinTransformer_t, self).__init__()
+        
+        self.model = models.swin_t(pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+
+class Mobilenet_v3_L(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobilenet_v3_L, self).__init__()
+        
+        self.model = models.mobilenet_v3_large(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier[-1] = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+class Mobilenet_v3_S(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobilenet_v3_S, self).__init__()
+        
+        self.model = models.mobilenet_v3_small(pretrained=True)
+        pre_layer = self.model.classifier[-1].in_features
+        self.model.classifier[-1] = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x 
+
+
+class Mobileone_s4(nn.Module):
+    def __init__(self, num_classes):
+        super(Mobileone_s4, self).__init__()
+        
+        self.model = timm.create_model("mobileone_s4", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+
+class CoAtnet_rw_224(nn.Module):
+    def __init__(self, num_classes):
+        super(CoAtnet_rw_224, self).__init__()
+        
+        self.model = timm.create_model("coatnet_0_rw_224", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class TinyNet_c(nn.Module):
+    def __init__(self, num_classes):
+        super(TinyNet_c, self).__init__()
+        
+        self.model = timm.create_model("tinynet_c", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+
+class TinyNet_E(nn.Module):
+    def __init__(self, num_classes):
+        super(TinyNet_E, self).__init__()
+        
+        self.model = timm.create_model("tinynet_e", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
         return x

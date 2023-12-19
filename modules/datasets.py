@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, Subset, random_split
+from torch.utils.data import Dataset, Subset, random_split, WeightedRandomSampler
 from torchvision.transforms import (
     Resize,
     ToTensor,
@@ -14,6 +14,16 @@ from typing import Tuple, List
 from enum import Enum
 from PIL import Image
 import os,random
+
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+def get_dataset_function(dataset_function_str):
+    if dataset_function_str == "baseDataset":
+        return MaskBaseDataset
+    elif dataset_function_str == "SplitByProfileDataset_weightSampler_stratify":
+        return MaskSplitByProfileDataset
+
 
 # 지원되는 이미지 확장자 리스트
 IMG_EXTENSIONS = [
@@ -111,7 +121,8 @@ class MaskBaseDataset(Dataset):
 
     image_paths = []
     mask_labels = []
-    gender_labels = []
+    gender_labels = [] 
+    
     age_labels = []
 
     def __init__(
@@ -120,7 +131,7 @@ class MaskBaseDataset(Dataset):
         transform=None,
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
-        val_ratio=0.2,
+        val_ratio = 0.2,
     ):
         self.data_dir = data_dir
         self.mean = mean
@@ -169,7 +180,7 @@ class MaskBaseDataset(Dataset):
             )
             sums = []
             squared = []
-            for image_path in self.image_paths[:3000]:
+            for image_path in self.image_paths[:]:
                 image = np.array(Image.open(image_path)).astype(np.int32)
                 sums.append(image.mean(axis=(0, 1)))
                 squared.append((image**2).mean(axis=(0, 1)))
@@ -250,6 +261,190 @@ class MaskBaseDataset(Dataset):
         train_set, val_set = random_split(self, [n_train, n_val])
         return train_set, val_set
 
+class ModifiedGenerationDataset(Dataset):
+    """마스크 데이터셋의 기본 클래스"""
+
+    num_classes = 3 * 2 * 3
+
+    _file_names = {
+        "mask1": MaskLabels.MASK,
+        "mask2": MaskLabels.MASK,
+        "mask3": MaskLabels.MASK,
+        "mask4": MaskLabels.MASK,
+        "mask5": MaskLabels.MASK,
+        "incorrect_mask": MaskLabels.INCORRECT,
+        "normal": MaskLabels.NORMAL,
+    }
+
+    image_paths = []
+    mask_labels = []
+    gender_labels = []
+    age_labels = []
+
+    def __init__(
+        self,
+        data_gen_dir,
+        transform=None,
+        mean=(0.548, 0.504, 0.479),
+        std=(0.237, 0.247, 0.246),
+        val_ratio = 0.2,
+    ):
+        self.data_gen_dir = data_gen_dir
+        self.mean = mean
+        self.std = std
+        self.val_ratio = val_ratio
+
+        self.transform = transform
+        self.setup()  # 데이터셋을 설정
+        self.calc_statistics()  # 통계시 계산 (평균 및 표준 편차)
+
+    def setup(self):
+        """데이터 디렉토리로부터 이미지 경로와 라벨을 설정하는 메서드"""
+        profiles = os.listdir(self.data_gen_dir)
+        for profile in profiles:
+            if profile.startswith("."):  # "." 로 시작하는 파일은 무시합니다
+                continue
+
+            img_path = os.path.join(self.data_gen_dir, profile)
+            _file_name, ext = os.path.splitext(profile)
+            if _file_name != "generated":  # Adjust based on your filename structure
+                continue
+
+            if "original" in profile:
+                continue
+
+            mask_label = self._file_names[_file_name]
+
+            # Extract information from the filename
+            id, gender, race, origin_age, _, age, _ = profile.split("_")
+            gender_label = GenderLabels.from_str(gender)
+            age_label = AgeLabels.from_number(age)
+
+            self.image_paths.append(img_path)
+            self.mask_labels.append(mask_label)
+            self.gender_labels.append(gender_label)
+            self.age_labels.append(age_label)
+
+    def calc_statistics(self):
+        """데이터셋의 통계치를 계산하는 메서드"""
+        has_statistics = self.mean is not None and self.std is not None
+        if not has_statistics:
+            print(
+                "[Warning] Calculating statistics... It can take a long time depending on your CPU machine"
+            )
+            sums = []
+            squared = []
+            for image_path in self.image_paths[:]:
+                image = np.array(Image.open(image_path)).astype(np.int32)
+                sums.append(image.mean(axis=(0, 1)))
+                squared.append((image**2).mean(axis=(0, 1)))
+
+            self.mean = np.mean(sums, axis=0) / 255
+            self.std = (np.mean(squared, axis=0) - self.mean**2) ** 0.5 / 255
+
+    def set_transform(self, transform):
+        """변환(transform)을 설정하는 메서드"""
+        self.transform = transform
+
+    def __getitem__(self, index):
+        """인덱스에 해당하는 데이터를 가져오는 메서드"""
+        assert self.transform is not None, ".set_tranform 메소드를 이용하여 transform 을 주입해주세요"
+
+        image = self.read_image(index)
+        mask_label = self.get_mask_label(index)
+        gender_label = self.get_gender_label(index)
+        age_label = self.get_age_label(index)
+        multi_class_label = self.encode_multi_class(mask_label, gender_label, age_label)
+
+        image_transform = self.transform(image)
+        return image_transform, multi_class_label
+
+    def __len__(self):
+        """데이터셋의 길이를 반환하는 메서드"""
+        return len(self.image_paths)
+
+    def get_mask_label(self, index) -> MaskLabels:
+        """인덱스에 해당하는 마스크 라벨을 반환하는 메서드"""
+        return self.mask_labels[index]
+
+    def get_gender_label(self, index) -> GenderLabels:
+        """인덱스에 해당하는 성별 라벨을 반환하는 메서드"""
+        return self.gender_labels[index]
+
+    def get_age_label(self, index) -> AgeLabels:
+        """인덱스에 해당하는 나이 라벨을 반환하는 메서드"""
+        return self.age_labels[index]
+
+    def read_image(self, index):
+        """인덱스에 해당하는 이미지를 읽는 메서드"""
+        image_path = self.image_paths[index]
+        return Image.open(image_path)
+
+    @staticmethod
+    def encode_multi_class(mask_label, gender_label, age_label) -> int:
+        """다중 라벨을 하나의 클래스로 인코딩하는 메서드"""
+        return mask_label * 6 + gender_label * 3 + age_label
+
+    @staticmethod
+    def decode_multi_class(
+        multi_class_label,
+    ) -> Tuple[MaskLabels, GenderLabels, AgeLabels]:
+        """인코딩된 다중 라벨을 각각의 라벨로 디코딩하는 메서드"""
+        mask_label = (multi_class_label // 6) % 3
+        gender_label = (multi_class_label // 3) % 2
+        age_label = multi_class_label % 3
+        return mask_label, gender_label, age_label
+
+    @staticmethod
+    def denormalize_image(image, mean, std):
+        """정규화된 이미지를 원래대로 되돌리는 메서드"""
+        img_cp = image.copy()
+        img_cp *= std
+        img_cp += mean
+        img_cp *= 255.0
+        img_cp = np.clip(img_cp, 0, 255).astype(np.uint8)
+        return img_cp
+
+    def split_dataset(self) -> Tuple[Subset, Subset]:
+        """데이터셋을 학습과 검증용으로 나누는 메서드
+        데이터셋을 train 과 val 로 나눕니다,
+        pytorch 내부의 torch.utils.data.random_split 함수를 사용하여 torch.utils.data.Subset 클래스 둘로 나눕니다.
+        """
+        n_val = int(len(self) * self.val_ratio)
+        n_train = len(self) - n_val
+        train_set, val_set = random_split(self, [n_train, n_val])
+        return train_set, val_set
+
+class CombinedDataset(Dataset):
+    def __init__(self, dataset1, dataset2, val_ratio=0.2):
+        self.dataset1 = dataset1
+        self.dataset2 = dataset2
+        self.val_ratio = val_ratio
+
+        # 두 데이터셋의 총 길이를 계산합니다
+        self.total_length = len(dataset1) + len(dataset2)
+
+    def __getitem__(self, index):
+        # 어떤 데이터셋에서 항목을 가져올지 인덱스를 기반으로 결정합니다
+        if index < len(self.dataset1):
+            return self.dataset1[index]
+        else:
+            # 두 번째 데이터셋 내에서 인덱스를 조정합니다
+            adjusted_index = index - len(self.dataset1)
+            return self.dataset2[adjusted_index]
+
+    def __len__(self):
+        return self.total_length
+
+    def split_dataset(self) -> Tuple[Subset, Subset]:
+        """데이터셋을 학습과 검증용으로 나누는 메서드
+        데이터셋을 train 과 val 로 나눕니다,
+        pytorch 내부의 torch.utils.data.random_split 함수를 사용하여 torch.utils.data.Subset 클래스 둘로 나눕니다.
+        """
+        n_val = int(len(self) * self.val_ratio)
+        n_train = len(self) - n_val
+        train_set, val_set = random_split(self, [n_train, n_val])
+        return train_set, val_set
 
 class MaskSplitByProfileDataset(MaskBaseDataset):
     """
@@ -264,8 +459,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
         val_ratio=0.2,
+        seed = 42
     ):
         self.indices = defaultdict(list)
+        self.seed = seed
         super().__init__(data_dir, mean, std, val_ratio)
 
     @staticmethod
@@ -278,11 +475,53 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         train_indices = set(range(length)) - val_indices
         return {"train": train_indices, "val": val_indices}
 
+    # train set과 valid set을 비슷한 클래스 비율로 나눔
+    def balanced_split_profile(self, profiles, val_ratio):
+        df = pd.DataFrame()
+        
+        profiles = os.listdir(self.data_dir)
+        profiles = [profile for profile in profiles if not profile.startswith(".")]
+        
+        df["path"] = profiles
+        
+        multi_labels = []
+        gender_labels = []
+        age_labels = []
+        
+        for profile in profiles:
+            id, gender, race, age = profile.split("_")
+            gender_label = GenderLabels.from_str(gender)
+            age_label = AgeLabels.from_number(age)
+
+            gender_labels.append(gender_label)
+            age_labels.append(age_label)
+
+        for i in range(len(profiles)):
+            multi_labels.append(gender_labels[i] * 3 + age_labels[i])
+            
+        df["multi_label"] = multi_labels
+        df["gender_label"] = gender_labels
+        df["age_label"] = age_labels
+                
+        train, val =  train_test_split(
+            df,
+            test_size=val_ratio,
+            random_state=self.seed,
+            stratify=df["multi_label"]
+        )
+        
+        train_indices = set(list(train.index))
+        val_indices = set(list(val.index))
+
+        return {"train": train_indices, "val": val_indices}
+                
+        
     def setup(self):
         """데이터셋 설정을 하는 메서드. 프로필 기준으로 나눈다."""
         profiles = os.listdir(self.data_dir)
         profiles = [profile for profile in profiles if not profile.startswith(".")]
-        split_profiles = self._split_profile(profiles, self.val_ratio)
+        # split_profiles = self._split_profile(profiles, self.val_ratio)
+        split_profiles = self.balanced_split_profile(profiles, self.val_ratio)
 
         cnt = 0
         for phase, indices in split_profiles.items():
@@ -316,6 +555,24 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
     def split_dataset(self) -> List[Subset]:
         """프로필 기준으로 나눈 데이터셋을 Subset 리스트로 반환하는 메서드"""
         return [Subset(self, indices) for phase, indices in self.indices.items()]
+    
+    
+    # Data Imbalance를 해결하기 위해 WeightedRandomSampler 사용
+    def get_sampler(self, phase) :
+        multi_class = []
+        for phase_idx in self.indices[phase]:
+            temp = self.encode_multi_class(self.mask_labels[phase_idx],
+                                    self.gender_labels[phase_idx],
+                                    self.age_labels[phase_idx])
+            multi_class.append(temp)
+       
+        class_sample_count = np.array([len(np.where(multi_class == t)[0]) for t in np.unique(multi_class)])		   
+        weight = 1. / class_sample_count
+								  
+        samples_weight = np.array([weight[t] for t in multi_class])
+        samples_weight = torch.from_numpy(samples_weight).double()
+        phase_sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        return phase_sampler
 
 
 class TestDataset(Dataset):

@@ -26,12 +26,21 @@ from model.models import get_model
 from modules.schedulers import get_scheduler
 from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
 from modules.metrics import get_metric_function
-from modules.datasets import get_dataset_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
 
 prj_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(prj_dir)
+
+seed = 111
+
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)  # if use multi-GPU
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(seed)
+random.seed(seed)
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -50,16 +59,6 @@ if __name__ == "__main__":
     
     data_dir = config['train_dir']
     data_gen_dir = config['train_gen_dir']
-    
-    
-    #seed
-    torch.manual_seed(config['seed'])
-    torch.cuda.manual_seed(config['seed'])
-    torch.cuda.manual_seed_all(config['seed'])  # if use multi-GPU
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    np.random.seed(config['seed'])
-    random.seed(config['seed'])
     
     #wandb
     if config['wandb']:
@@ -84,30 +83,21 @@ if __name__ == "__main__":
     transforms.Normalize(mean=config['mean'],
                         std=config['std'])
     ])
-    if config['dataset'] == "baseDataset":
-        dataset =get_dataset_function(config['dataset'])
-        dataset = dataset(data_dir, transform,val_ratio=config['val_size'])
-        
-        train_dataset, val_dataset = dataset.split_dataset()
-        
-        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
-        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
-    else:
-        dataset =get_dataset_function(config['dataset'])
-        dataset = dataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
-        
-        train_dataset, val_dataset = dataset.split_dataset()
-        
-        train_sampler = dataset.get_sampler('train')
-        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=train_sampler)
+
     
-        valid_sampler = dataset.get_sampler('val')
-        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=valid_sampler)
-        
-        
-    num_classes = dataset.num_classes
+    dataset = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
 
+    # dataset_tatin = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
+    # dataset_generation = ModifiedGenerationDataset(data_gen_dir, transform, val_ratio=config['val_size'])
 
+    num_classes = MaskBaseDataset.num_classes
+    
+    # combined_dataset = CombinedDataset(dataset_tatin, dataset_generation)
+
+    train_dataset, val_dataset = dataset.split_dataset()
+
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
     if config['model_custom']:
         model = get_model(config['model']['architecture'])
@@ -116,8 +106,6 @@ if __name__ == "__main__":
         model = get_model(config['model']['architecture'])
         model = model(config['model']['architecture'], **config['model']['args'])
     model = model.to(device)
-    # model = model(3, 10).to(device)
-    # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)
     wandb.watch(model)
     
     optimizer = get_optimizer(optimizer_str=config['optimizer']['name'])
@@ -147,8 +135,11 @@ if __name__ == "__main__":
         
         for iter, (img, label) in enumerate(train_dataloader):
             img = img.to(device)
-            label = label.to(device)
-            
+            # label = label.to(device)
+            mask_label, gender_label, age_label = MaskBaseDataset.decode_multi_class(label)
+            mask_label, gender_label, age_label = mask_label.to(device), gender_label.to(device), age_label.to(device)
+            label = mask_label
+
             batch_size = img.shape[0]
 
             pred_value = model(img)
@@ -198,7 +189,11 @@ if __name__ == "__main__":
 
             ##fill##
             img = img.to(device)
-            label = label.to(device)
+            # label = label.to(device)
+            mask_label, gender_label, age_label = MaskBaseDataset.decode_multi_class(label)
+            mask_label, gender_label, age_label = mask_label.to(device), gender_label.to(device), age_label.to(device)
+            label = mask_label
+
             batch_size = img.shape[0]
             with torch.no_grad():
                 pred_value = model(img)
