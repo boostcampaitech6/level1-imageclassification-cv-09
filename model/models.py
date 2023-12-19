@@ -50,7 +50,23 @@ def get_model(model_str: str):
     elif model_str == 'tinynet_c':
         return TinyNet_c  
     elif model_str == 'tinynet_e':
-        return TinyNet_E  
+        return TinyNet_E
+    elif model_str == 'tf_efficientnet_b5.ns_jft_in1k':
+        return tf_efficientnet_b5_ns
+    elif model_str == 'tf_efficientnetv2_m.in21k_ft_in1k':
+        return tf_efficientnetv2_m_in21k
+    elif model_str == 'caformer_b36.sail_in22k_ft_in1k':
+        return caformer_b36_sail_in22k_ft_in1k
+    elif model_str == 'swinv2_base_window12to16_192to256.ms_in22k_ft_in1k':
+        return swinv2_base_window12to16_192to256_ms_in22k_ft_in1k
+    elif model_str == 'caformer_s36.sail_in22k_ft_in1k':
+        return caformer_s36_sail_in22k_ft_in1k
+    elif model_str == 'convformer_m36.sail_in22k_ft_in1k':
+        return convformer_m36_sail_in22k_ft_in1k
+    elif model_str == 'tiny_vit_21m_224.dist_in22k_ft_in1k':
+        return tiny_vit_21m_224_dist_in22k_ft_in1k
+    elif model_str == 'convnext_small.in12k_ft_in1k':
+        return convnext_small_in12k_ft_in1k
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
@@ -530,4 +546,122 @@ class TinyNet_E(nn.Module):
     def forward(self, x):
         x = self.model(x)
         x = self.linear(x)
+        return x
+    
+class tf_efficientnet_b5_ns(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnet_b5_ns, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnet_b5.ns_jft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class tf_efficientnetv2_m_in21k(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnetv2_m_in21k, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnetv2_m.in21k_ft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class tf_efficientnet_b2_ns_jft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnet_b2_ns_jft_in1k, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnet_b2.ns_jft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class caformer_b36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(caformer_b36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("caformer_b36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+class swinv2_base_window12to16_192to256_ms_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(swinv2_base_window12to16_192to256_ms_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("swinv2_base_window12to16_192to256.ms_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class caformer_s36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(caformer_s36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("caformer_s36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class convformer_m36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(convformer_m36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("convformer_m36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+    
+class convnext_small_in12k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(convnext_small_in12k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("convnext_small.in12k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class tiny_vit_21m_224_dist_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(tiny_vit_21m_224_dist_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
         return x

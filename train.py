@@ -27,6 +27,7 @@ from modules.schedulers import get_scheduler
 from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
 from modules.metrics import get_metric_function
 from modules.datasets import get_dataset_function
+from modules.transforms import get_transform_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
 
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     shutil.copy(config_path, os.path.join(train_result_dir,'train.yaml'))
     
     data_dir = config['train_dir']
-    data_gen_dir = config['train_gen_dir']
+    # data_gen_dir = config['train_gen_dir']
     
     
     #seed
@@ -77,13 +78,8 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("device : ",device)
     
+    transform = get_transform_function(config['transform'],config)
     
-    transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Resize(config['resize_size']),
-    transforms.Normalize(mean=config['mean'],
-                        std=config['std'])
-    ])
     if config['dataset'] == "baseDataset":
         dataset =get_dataset_function(config['dataset'])
         dataset = dataset(data_dir, transform,val_ratio=config['val_size'])
@@ -138,14 +134,14 @@ if __name__ == "__main__":
     f1_score_lst = ["acc", "f1_score", "mask_f1_score", "gender_f1_score", "age_f1_score"]
     f1_class_score_lst = ["mask_class_f1_score", "gender_class_f1_score", "age_class_f1_score"]
     
-    for epoch_id in tqdm(range(config['n_epochs'])):
+    for epoch_id in range(config['n_epochs']):
         tic = time()
         train_loss = 0
         train_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}
         train_class_scores = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
         train_class_cnt = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
         
-        for iter, (img, label) in enumerate(train_dataloader):
+        for iter, (img, label) in enumerate(tqdm(train_dataloader)):
             img = img.to(device)
             label = label.to(device)
             

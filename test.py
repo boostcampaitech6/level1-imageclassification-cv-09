@@ -7,6 +7,7 @@ import os, sys, random
 from tqdm import tqdm
 from datetime import datetime
 
+from modules.transforms import get_transform_function
 from modules.utils import load_yaml,save_yaml
 from modules.datasets import TestDataset
 from model.models import get_model
@@ -45,12 +46,7 @@ if __name__ == '__main__':
     info_path = os.path.join(data_dir, "info.csv")
     info = pd.read_csv(info_path)
     
-    transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Resize(train_config['resize_size']),
-    transforms.Normalize(mean=train_config['mean'],
-                        std=train_config['std'])
-    ])
+    transform = get_transform_function(train_config['transform'],train_config)
     
     img_paths = [os.path.join(img_root, img_id) for img_id in info.ImageID]
     test_dataset = TestDataset(img_paths, transform)
