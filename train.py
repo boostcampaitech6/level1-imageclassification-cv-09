@@ -24,11 +24,7 @@ from model.losses import get_loss_function
 from model.models import get_model
 
 from modules.schedulers import get_scheduler
-<<<<<<< HEAD
 from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
-=======
-from modules.datasets import MaskBaseDataset, MaskSplitByProfileDataset
->>>>>>> e67ff02661aa204ce1033315bd78df1ae869e95f
 from modules.metrics import get_metric_function
 from modules.datasets import get_dataset_function
 from modules.utils import load_yaml,save_yaml
@@ -88,24 +84,6 @@ if __name__ == "__main__":
     transforms.Normalize(mean=config['mean'],
                         std=config['std'])
     ])
-<<<<<<< HEAD
-
-    
-    # dataset = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
-
-    dataset_tatin = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
-    dataset_generation = ModifiedGenerationDataset(data_gen_dir, transform, val_ratio=config['val_size'])
-
-    num_classes = MaskBaseDataset.num_classes
-    
-    combined_dataset = CombinedDataset(dataset_tatin, dataset_generation)
-
-    # train_dataset, val_dataset = dataset.split_dataset()
-    train_dataset, val_dataset = combined_dataset.split_dataset()
-
-    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
-    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
-=======
     if config['dataset'] == "baseDataset":
         dataset =get_dataset_function(config['dataset'])
         dataset = dataset(data_dir, transform,val_ratio=config['val_size'])
@@ -130,7 +108,6 @@ if __name__ == "__main__":
     num_classes = dataset.num_classes
 
 
->>>>>>> e67ff02661aa204ce1033315bd78df1ae869e95f
     
     if config['model_custom']:
         model = get_model(config['model']['architecture'])
