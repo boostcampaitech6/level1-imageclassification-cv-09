@@ -24,7 +24,7 @@ from model.losses import get_loss_function
 from model.models import get_model
 
 from modules.schedulers import get_scheduler
-from modules.datasets import MaskBaseDataset
+from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
 from modules.metrics import get_metric_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
@@ -58,12 +58,13 @@ if __name__ == "__main__":
     shutil.copy(config_path, os.path.join(train_result_dir,'train.yaml'))
     
     data_dir = config['train_dir']
+    data_gen_dir = config['train_gen_dir']
     
     #wandb
     if config['wandb']:
         wandb.init(project=config["wandb_project"], config={
                     "learning_rate": config['optimizer']['args']['lr'],
-                    "architecture": config['architecture'],
+                    "architecture": config['model']['architecture'],
                     "dataset": "MaskDaset",
                     "notes":config['wandb_note']
                     },
@@ -76,7 +77,6 @@ if __name__ == "__main__":
     print("device : ",device)
     
     
-            
     transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Resize(config['resize_size']),
@@ -85,11 +85,18 @@ if __name__ == "__main__":
     ])
 
     
-    dataset = MaskBaseDataset(data_dir, transform,val_ratio=config['val_size'])
+    # dataset = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
+
+    dataset_tatin = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
+    dataset_generation = ModifiedGenerationDataset(data_gen_dir, transform, val_ratio=config['val_size'])
+
     num_classes = MaskBaseDataset.num_classes
     
-    train_dataset, val_dataset = dataset.split_dataset()
-    
+    combined_dataset = CombinedDataset(dataset_tatin, dataset_generation)
+
+    # train_dataset, val_dataset = dataset.split_dataset()
+    train_dataset, val_dataset = combined_dataset.split_dataset()
+
     train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     
