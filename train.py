@@ -24,23 +24,18 @@ from model.losses import get_loss_function
 from model.models import get_model
 
 from modules.schedulers import get_scheduler
+<<<<<<< HEAD
 from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
+=======
+from modules.datasets import MaskBaseDataset, MaskSplitByProfileDataset
+>>>>>>> e67ff02661aa204ce1033315bd78df1ae869e95f
 from modules.metrics import get_metric_function
+from modules.datasets import get_dataset_function
 from modules.utils import load_yaml,save_yaml
 from modules.logger import MetricAverageMeter,LossAverageMeter
 
 prj_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(prj_dir)
-
-seed = 111
-
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-torch.cuda.manual_seed_all(seed)  # if use multi-GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(seed)
-random.seed(seed)
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -59,6 +54,16 @@ if __name__ == "__main__":
     
     data_dir = config['train_dir']
     data_gen_dir = config['train_gen_dir']
+    
+    
+    #seed
+    torch.manual_seed(config['seed'])
+    torch.cuda.manual_seed(config['seed'])
+    torch.cuda.manual_seed_all(config['seed'])  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(config['seed'])
+    random.seed(config['seed'])
     
     #wandb
     if config['wandb']:
@@ -83,6 +88,7 @@ if __name__ == "__main__":
     transforms.Normalize(mean=config['mean'],
                         std=config['std'])
     ])
+<<<<<<< HEAD
 
     
     # dataset = MaskBaseDataset(data_dir, transform, val_ratio=config['val_size'])
@@ -99,6 +105,32 @@ if __name__ == "__main__":
 
     train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
     val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=config['shuffle'],drop_last=config['drop_last'],num_workers=config['num_workers'])
+=======
+    if config['dataset'] == "baseDataset":
+        dataset =get_dataset_function(config['dataset'])
+        dataset = dataset(data_dir, transform,val_ratio=config['val_size'])
+        
+        train_dataset, val_dataset = dataset.split_dataset()
+        
+        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
+        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
+    else:
+        dataset =get_dataset_function(config['dataset'])
+        dataset = dataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
+        
+        train_dataset, val_dataset = dataset.split_dataset()
+        
+        train_sampler = dataset.get_sampler('train')
+        train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=train_sampler)
+    
+        valid_sampler = dataset.get_sampler('val')
+        val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'], sampler=valid_sampler)
+        
+        
+    num_classes = dataset.num_classes
+
+
+>>>>>>> e67ff02661aa204ce1033315bd78df1ae869e95f
     
     if config['model_custom']:
         model = get_model(config['model']['architecture'])
