@@ -3,7 +3,7 @@ from facenet_pytorch import MTCNN
 from rembg import remove
 from PIL import Image
 import numpy as np
-import mediapipe as mp
+# import mediapipe as mp
 import cv2
 
 def get_transform_function(transform_function_str,config):

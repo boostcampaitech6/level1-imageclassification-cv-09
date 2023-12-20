@@ -134,6 +134,7 @@ if __name__ == "__main__":
     
     f1_score_lst = ["acc", "f1_score", "mask_f1_score", "gender_f1_score", "age_f1_score"]
     f1_class_score_lst = ["mask_class_f1_score", "gender_class_f1_score", "age_class_f1_score"]
+    f1_mask_age_lst= ["mask_age_f1_score"]
     
     for epoch_id in range(config['n_epochs']):
         tic = time()
@@ -141,6 +142,8 @@ if __name__ == "__main__":
         train_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}
         train_class_scores = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
         train_class_cnt = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
+        train_mask_class_score = {metric_name: np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_mask_age_lst}
+        train_mask_class_cnt = {metric_name: np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_mask_age_lst}
         
         for iter, (img, label) in enumerate(tqdm(train_dataloader)):
             img = img.to(device)
@@ -173,6 +176,10 @@ if __name__ == "__main__":
                     score, cnt = metric_func(pred_value, label)
                     train_class_scores[metric_name] += score
                     train_class_cnt[metric_name] += cnt
+                elif metric_name in f1_mask_age_lst:
+                    score, cnt = metric_func(pred_value, label)
+                    train_mask_class_score[metric_name] += score
+                    train_mask_class_cnt[metric_name] += cnt
 
 
             train_loss += loss.item() / len(train_dataloader)
@@ -182,7 +189,12 @@ if __name__ == "__main__":
         for metric_name, _ in train_class_scores.items():
             for i in range(3):
                 if train_class_scores[metric_name][i] != 0:
-                    train_class_scores[metric_name][i] = train_class_scores[metric_name][i] / train_class_cnt[metric_name][i]    
+                    train_class_scores[metric_name][i] = train_class_scores[metric_name][i] / train_class_cnt[metric_name][i]
+                    
+        for metric_name, _ in train_mask_class_score.items():
+            for i in range(9):
+                if train_mask_class_score[metric_name][i] != 0:
+                    train_mask_class_score[metric_name][i] = train_mask_class_score[metric_name][i] / train_mask_class_cnt[metric_name][i]
 
             
         
@@ -193,6 +205,8 @@ if __name__ == "__main__":
         valid_scores = {metric_name: 0 for metric_name, _ in metric_funcs.items() if metric_name in f1_score_lst}
         valid_class_scores = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
         valid_class_cnt = {metric_name: np.array([0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_class_score_lst}
+        valid_mask_class_score = {metric_name: np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_mask_age_lst}
+        valid_mask_class_cnt = {metric_name: np.array([0.,0.,0.,0.,0.,0.,0.,0.,0.]) for metric_name, _ in metric_funcs.items() if metric_name in f1_mask_age_lst}
 
         # if (iter % 20 == 0) or (iter == len(qd_train_dataloader)-1):
         model.eval()
@@ -227,13 +241,23 @@ if __name__ == "__main__":
                     score, cnt = metric_func(pred_value, label)
                     valid_class_scores[metric_name] += score
                     valid_class_cnt[metric_name] += cnt
+                elif metric_name in f1_mask_age_lst:
+                    score, cnt = metric_func(pred_value, label)
+                    valid_mask_class_score[metric_name] += score
+                    valid_mask_class_cnt[metric_name] += cnt
                         
             valid_loss += loss.item() / len(val_dataloader)
             
         for metric_name, _ in valid_class_scores.items():
             for i in range(3):
                 if valid_class_scores[metric_name][i] != 0:
-                    valid_class_scores[metric_name][i] = valid_class_scores[metric_name][i] / valid_class_cnt[metric_name][i]    
+                    valid_class_scores[metric_name][i] = valid_class_scores[metric_name][i] / valid_class_cnt[metric_name][i]
+                    
+        for metric_name, _ in valid_mask_class_score.items():
+            for i in range(9):
+                if valid_mask_class_score[metric_name][i] != 0:
+                    valid_mask_class_score[metric_name][i] = valid_mask_class_score[metric_name][i] / valid_mask_class_cnt[metric_name][i]
+        
         # print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Valid Loss %.4f | Valid Acc %.4f" %
         #     (epoch_id, config['n_epochs'], train_loss, train_acc, valid_loss, valid_acc))
         print("Epoch [%4d/%4d] | Train Loss %.4f | Train Acc %.4f | Train F1 %.4f | Valid Loss %.4f | Valid Acc %.4f | Valid F1 %.4f"  %
@@ -241,16 +265,25 @@ if __name__ == "__main__":
         print("  train_mask_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (train_scores['mask_f1_score'], train_class_scores['mask_class_f1_score'][0], train_class_scores['mask_class_f1_score'][1], train_class_scores['mask_class_f1_score'][2]))
         print("  train_gender_f1_score %.4f | label_0 %.4f | label_1 %.4f" % (train_scores['gender_f1_score'], train_class_scores['gender_class_f1_score'][0], train_class_scores['gender_class_f1_score'][1]))
         print("  train_age_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (train_scores['age_f1_score'], train_class_scores['age_class_f1_score'][0], train_class_scores['age_class_f1_score'][1], train_class_scores['age_class_f1_score'][2]))
+        print("  train_mask0_age0_f1_score %.4f | train_mask0_age1_f1_score %.4f | train_mask0_age2_f1_score %.4f | train_mask1_age0_f1_score %.4f | train_mask1_age1_f1_score %.4f | train_mask1_age2_f1_score %.4f | train_mask2_age0_f1_score %.4f | train_mask2_age1_f1_score %.4f | train_mask2_age2_f1_score %.4f" % tuple(x for x in train_mask_class_score['mask_age_f1_score']))
         print("  valid_mask_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['mask_f1_score'], valid_class_scores['mask_class_f1_score'][0], valid_class_scores['mask_class_f1_score'][1], valid_class_scores['mask_class_f1_score'][2]))
         print("  valid_gender_f1_score %.4f | label_0 %.4f | label_1 %.4f" % (valid_scores['gender_f1_score'], valid_class_scores['gender_class_f1_score'][0], valid_class_scores['gender_class_f1_score'][1]))
         print("  valid_age_f1_score %.4f | label_0 %.4f | label_1 %.4f | label_2 %.4f" % (valid_scores['age_f1_score'], valid_class_scores['age_class_f1_score'][0], valid_class_scores['age_class_f1_score'][1], valid_class_scores['age_class_f1_score'][2]))
-        wandb.log({"train_time":train_time,"train_loss":train_loss,"train_acc":train_scores['acc'],"train_f1":train_scores['f1_score'], "valid_loss":valid_loss, "valid_acc":valid_scores['acc'], "valid_f1":valid_scores['f1_score'],
+        print("  valid_mask0_age0_f1_score %.4f | valid_mask0_age1_f1_score %.4f | valid_mask0_age2_f1_score %.4f | valid_mask1_age0_f1_score %.4f | valid_mask1_age1_f1_score %.4f | valid_mask1_age2_f1_score %.4f | valid_mask2_age0_f1_score %.4f | valid_mask2_age1_f1_score %.4f | valid_mask2_age2_f1_score %.4f" % tuple(x for x in valid_mask_class_score['mask_age_f1_score']))
+        
+        new_wandb_metric_dict = {"train_time":train_time,"train_loss":train_loss,"train_acc":train_scores['acc'],"train_f1":train_scores['f1_score'], "valid_loss":valid_loss, "valid_acc":valid_scores['acc'], "valid_f1":valid_scores['f1_score'],
                    "train_mask_f1_score":train_scores['mask_f1_score'],"train_mask0_f1_score":train_class_scores['mask_class_f1_score'][0],"train_mask1_f1_score":train_class_scores['mask_class_f1_score'][1],"train_mask2_f1_score":train_class_scores['mask_class_f1_score'][2],
                    "train_age_f1_score":train_scores['age_f1_score'],"train_age0_f1_score":train_class_scores['age_class_f1_score'][0],"train_age1_f1_score":train_class_scores['age_class_f1_score'][1],"train_age2_f1_score":train_class_scores['age_class_f1_score'][2],
                    "train_gender_f1_score":train_scores['gender_f1_score'],"train_gender0_f1_score":train_class_scores['gender_class_f1_score'][0],"train_gender1_f1_score":train_class_scores['gender_class_f1_score'][1],
                    "valid_mask_f1_score":valid_scores['mask_f1_score'],"valid_mask0_f1_score":valid_class_scores['mask_class_f1_score'][0],"valid_mask1_f1_score":valid_class_scores['mask_class_f1_score'][1],"valid_mask2_f1_score":valid_class_scores['mask_class_f1_score'][2],
                    "valid_age_f1_score":valid_scores['age_f1_score'],"valid_age0_f1_score":valid_class_scores['age_class_f1_score'][0],"valid_age1_f1_score":valid_class_scores['age_class_f1_score'][1],"valid_age2_f1_score":valid_class_scores['age_class_f1_score'][2],
-                   "valid_gender_f1_score":valid_scores['gender_f1_score'],"valid_gender0_f1_score":valid_class_scores['gender_class_f1_score'][0],"valid_gender1_f1_score":valid_class_scores['gender_class_f1_score'][1]})
+                   "valid_gender_f1_score":valid_scores['gender_f1_score'],"valid_gender0_f1_score":valid_class_scores['gender_class_f1_score'][0],"valid_gender1_f1_score":valid_class_scores['gender_class_f1_score'][1]}
+        for i in range(9):
+            new_wandb_metric_dict[f"train_mask{i//3}_age{i%3}_f1_score"] = train_mask_class_score['mask_age_f1_score'][i]
+        for i in range(9):
+            new_wandb_metric_dict[f"valid_mask{i//3}_age{i%3}_f1_score"] = valid_mask_class_score['mask_age_f1_score'][i]
+                
+        wandb.log(new_wandb_metric_dict)
         
         if max_f1_score < valid_scores['f1_score']:
             check_point = {
