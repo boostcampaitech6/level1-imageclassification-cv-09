@@ -19,11 +19,13 @@ def get_loss_function(loss_function_str: str):
     elif loss_function_str == "Cross_entropy":
         return cross_entropy_loss
 
-
-
-def cross_entropy_loss(output,target):
-    cross_entropy = nn.CrossEntropyLoss()
-    return cross_entropy(output,target)
+class cross_entropy_loss(nn.Module):
+    def __init__(self, weight, **kwargs):
+        super(cross_entropy_loss, self).__init__()
+        
+    def forward(output,target):
+        cross_entropy = nn.CrossEntropyLoss()
+        return cross_entropy(output,target)
 
 
 class CCE(nn.Module):
@@ -78,39 +80,21 @@ class GeneralizedDiceLoss(nn.Module):
         return 1. - dice
 
 class FocalLoss(nn.Module):
-    def __init__(self, gamma=2, alpha=0.25, size_average=True, device='cuda:0',**kwargs):
+    def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
         super(FocalLoss, self).__init__()
-        """
-        gamma(int) : focusing parameter.
-        alpha(list) : alpha-balanced term.
-        size_average(bool) : whether to apply reduction to the output.
-        """
-        self.gamma = gamma
         self.alpha = alpha
-        self.size_average = size_average
-        self.device = device
+        self.gamma = gamma
+        self.logits = logits
+        self.reduce = reduce
 
     def forward(self, inputs, targets):
-        # input : N * C (btach_size, num_class)
-        # target : N (batch_size)
+    
+        ce_loss = nn.CrossEntropyLoss()(inputs, targets)
 
-        CE = F.cross_entropy(inputs, targets, reduction='none')  # -log(pt)
-        pt = torch.exp(-CE)  # pt
-        loss = (1 - pt) ** self.gamma * CE  # -(1-pt)^rlog(pt)
+        pt = torch.exp(-ce_loss)
+        F_loss = self.alpha * (1-pt)**self.gamma * ce_loss
 
-        if self.alpha is not None:
-            alpha = torch.tensor(self.alpha, dtype=torch.float).to(self.device)
-            # in case that a minority class is not selected when mini-batch sampling
-            if len(self.alpha) != len(torch.unique(targets)):
-                temp = torch.zeros(len(self.alpha)).to(self.device)
-                temp[torch.unique(targets)] = alpha.index_select(0, torch.unique(targets))
-                alpha_t = temp.gather(0, targets)
-                loss = alpha_t * loss
-            else:
-                alpha_t = alpha.gather(0, targets)
-                loss = alpha_t * loss
-
-        if self.size_average:
-            loss = torch.mean(loss)
-
-        return loss
+        if self.reduce:
+            return torch.mean(F_loss)
+        else:
+            return F_loss

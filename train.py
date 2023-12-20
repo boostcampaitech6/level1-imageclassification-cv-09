@@ -112,6 +112,7 @@ if __name__ == "__main__":
         model = get_model(config['model']['architecture'])
         model = model(config['model']['architecture'], **config['model']['args'])
     model = model.to(device)
+    print(f"Load model architecture: {config['model']['architecture']}")
     # model = model(3, 10).to(device)
     # model = ResNet1(BasicBlock, [3, 4, 6, 3]).to(device)
     wandb.watch(model)
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     scheduler = scheduler(optimizer=optimizer, **config['scheduler']['args'])
     
     loss_func = get_loss_function(loss_function_str=config['loss']['name'])
-    # loss_func = loss_func(**config['loss']['args'])
+    loss_func = loss_func(**config['loss']['args'])
     # loss_func = loss_func()
     
     metric_funcs = {metric_name:get_metric_function(metric_name) for metric_name in config['metrics']}
@@ -148,8 +149,16 @@ if __name__ == "__main__":
             batch_size = img.shape[0]
 
             pred_value = model(img)
-
-            loss = loss_func(pred_value, label)
+            if config['multi_label']:
+                mask_labels, gender_labels, age_labels = dataset.decode_multi_class(label)
+                mask_labels, gender_labels, age_labels = mask_labels.to(device), gender_labels.to(device), age_labels.to(device)
+                (mask_outs, gender_outs, age_outs) = torch.split(pred_value, [3, 2, 3], dim=1)
+                mask_loss = loss_func(mask_outs, mask_labels)
+                gender_loss = loss_func(gender_outs, gender_labels)
+                age_loss = loss_func(age_outs, age_labels)
+                loss = mask_loss + gender_loss + age_loss
+            else:
+                loss = loss_func(pred_value, label)
 
             # Backpropagation
             loss.backward()
@@ -198,7 +207,17 @@ if __name__ == "__main__":
             batch_size = img.shape[0]
             with torch.no_grad():
                 pred_value = model(img)
-            loss = loss_func(pred_value, label)
+                
+            if config['multi_label']:
+                mask_labels, gender_labels, age_labels = dataset.decode_multi_class(label)
+                mask_labels, gender_labels, age_labels = mask_labels.to(device), gender_labels.to(device), age_labels.to(device)
+                (mask_outs, gender_outs, age_outs) = torch.split(pred_value, [3, 2, 3], dim=1)
+                mask_loss = loss_func(mask_outs, mask_labels)
+                gender_loss = loss_func(gender_outs, gender_labels)
+                age_loss = loss_func(age_outs, age_labels)
+                loss = mask_loss + gender_loss + age_loss
+            else:
+                loss = loss_func(pred_value, label)
             
             # Accuracy 계산
             for metric_name, metric_func in metric_funcs.items():
