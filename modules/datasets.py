@@ -131,7 +131,7 @@ class MaskBaseDataset(Dataset):
         transform=None,
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
-        val_ratio = 0.2,
+        val_ratio = 0.2
     ):
         self.data_dir = data_dir
         self.mean = mean
@@ -459,11 +459,16 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         mean=(0.548, 0.504, 0.479),
         std=(0.237, 0.247, 0.246),
         val_ratio=0.2,
-        seed = 42
+        seed = 42,
+        drop_age_mode = ["train", "val"],
+        drop_age = ["57", "58", "59"]
     ):
         self.indices = defaultdict(list)
         self.seed = seed
+        self.drop_age_mode  = drop_age_mode
+        self.drop_age = drop_age
         super().__init__(data_dir, mean, std, val_ratio)
+    
 
     @staticmethod
     def _split_profile(profiles, val_ratio):
@@ -474,6 +479,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         val_indices = set(random.sample(range(length), k=n_val))
         train_indices = set(range(length)) - val_indices
         return {"train": train_indices, "val": val_indices}
+
 
     # train set과 valid set을 비슷한 클래스 비율로 나눔
     def balanced_split_profile(self, profiles, val_ratio):
@@ -511,6 +517,26 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         val_indices = set(list(val.index))
 
         return {"train": train_indices, "val": val_indices}
+    
+    
+    # age_remove
+    def age_drop(
+        self,
+        split_profiles,
+        profiles,
+        mode=["train", "val"],
+        age_list=["57", "58", "59"],
+    ):  # mode에서 특정 나이 제거
+        for phase, indices in split_profiles.items():
+            removed_idx = []
+            if phase in mode:
+                for idx in indices:
+                    if profiles[idx].split("_")[-1] in age_list:
+                        removed_idx.append(idx)
+            for ri in removed_idx:
+                split_profiles[phase].remove(ri)
+
+        return split_profiles
                 
         
     def setup(self):
@@ -519,6 +545,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         profiles = [profile for profile in profiles if not profile.startswith(".")]
         # split_profiles = self._split_profile(profiles, self.val_ratio)
         split_profiles = self.balanced_split_profile(profiles, self.val_ratio)
+        
+        split_profiles = self.age_drop(
+            split_profiles, profiles, self.drop_age_mode, self.drop_age
+        )
 
         cnt = 0
         for phase, indices in split_profiles.items():

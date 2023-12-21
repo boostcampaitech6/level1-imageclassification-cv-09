@@ -18,12 +18,18 @@ def get_loss_function(loss_function_str: str):
 
     elif loss_function_str == "Cross_entropy":
         return cross_entropy_loss
+    
+    elif loss_function_str == "FocalTverskyLoss":
+        return FocalTverskyLoss
+    
+    elif loss_function_str == "TverskyLoss":
+        return TverskyLoss
 
 class cross_entropy_loss(nn.Module):
     def __init__(self, weight, **kwargs):
         super(cross_entropy_loss, self).__init__()
         
-    def forward(output,target):
+    def forward(self, output,target):
         cross_entropy = nn.CrossEntropyLoss()
         return cross_entropy(output,target)
 
@@ -98,3 +104,59 @@ class FocalLoss(nn.Module):
             return torch.mean(F_loss)
         else:
             return F_loss
+        
+class FocalTverskyLoss(torch.nn.Module):
+    def __init__(self, alpha=0.5, beta=0.5, gamma=0.75):
+        super(FocalTverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+
+    def forward(self, y_pred, y_true):
+        # Assuming y_pred is softmax output, so we don't need to apply softmax
+        # If not, apply softmax or log_softmax depending on your requirements
+        y_pred = F.softmax(y_pred,dim=1)
+        
+        # Convert y_true to one-hot format
+        y_true_one_hot = F.one_hot(y_true, num_classes=y_pred.size(1)).float()
+
+        # True Positives, False Positives & False Negatives
+        tp = torch.sum(y_pred * y_true_one_hot, dim=0)
+        fp = torch.sum(y_pred * (1 - y_true_one_hot), dim=0)
+        fn = torch.sum((1 - y_pred) * y_true_one_hot, dim=0)
+
+        # Tversky index for each class
+        tversky = tp / (tp + self.alpha * fp + self.beta * fn)
+
+        # Focal Tversky Loss
+        focal_tversky_loss = torch.sum(torch.pow((1 - tversky), 1 / self.gamma))
+
+        return focal_tversky_loss
+    
+class TverskyLoss(torch.nn.Module):
+    def __init__(self, alpha=0.5, beta=0.5):
+        super(TverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+
+    def forward(self, y_pred, y_true):
+        # Convert y_true to one-hot format if it's not already
+        y_pred = F.softmax(y_pred,dim=1)
+        y_true_one_hot = F.one_hot(y_true, num_classes=y_pred.size(1)).float()
+
+        # Flatten the tensors to shape (batch_size*num_classes, )
+        y_true_flat = y_true_one_hot.view(-1)
+        y_pred_flat = y_pred.view(-1)
+
+        # Calculate True Positives (TP), False Positives (FP), and False Negatives (FN)
+        tp = torch.sum(y_pred_flat * y_true_flat)
+        fp = torch.sum(y_pred_flat * (1 - y_true_flat))
+        fn = torch.sum((1 - y_pred_flat) * y_true_flat)
+
+        # Tversky index
+        tversky_index = tp / (tp + self.alpha * fp + self.beta * fn)
+
+        # Tversky loss
+        tversky_loss = 1 - tversky_index
+
+        return tversky_loss

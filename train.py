@@ -79,6 +79,7 @@ if __name__ == "__main__":
     print("device : ",device)
     
     transform = get_transform_function(config['transform'],config)
+    print(transform)
     
     if config['dataset'] == "baseDataset":
         dataset =get_dataset_function(config['dataset'])
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], drop_last=config['drop_last'],num_workers=config['num_workers'])
     else:
         dataset =get_dataset_function(config['dataset'])
-        dataset = dataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'])
+        dataset = dataset(data_dir, transform,val_ratio=config['val_size'],seed=config['seed'], drop_age_mode=config["drop_age_mode"], drop_age=config["drop_age"])
         
         train_dataset, val_dataset = dataset.split_dataset()
         
