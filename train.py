@@ -79,6 +79,7 @@ if __name__ == "__main__":
     print("device : ",device)
     
     transform = get_transform_function(config['transform'],config)
+    print(transform)
     
     if config['dataset'] == "baseDataset":
         dataset =get_dataset_function(config['dataset'])

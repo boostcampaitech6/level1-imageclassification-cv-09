@@ -5,6 +5,8 @@ from PIL import Image
 import numpy as np
 # import mediapipe as mp
 import cv2
+from torchvision.transforms import v2
+
 
 def get_transform_function(transform_function_str,config):
     
@@ -14,6 +16,12 @@ def get_transform_function(transform_function_str,config):
         return CCTransform(config)
     elif transform_function_str == "faceCrop_transform":
         return FCTransform(config)
+    elif transform_function_str == "CCHFTransform":
+        return CCHFTransform(config)
+    elif transform_function_str == "CCASTransform":
+        return CCASTransform(config)
+    elif transform_function_str == "CCACTransform":
+        return CCACTransform(config)
 
 
 # class FaceCropAndRemoveBG(object):
@@ -137,6 +145,36 @@ def baseTransform(config):
 def CCTransform(config):
     return transforms.Compose([
     transforms.ToTensor(),
+    transforms.CenterCrop(config['centor_crop']),
+    transforms.Resize(config['resize_size']),
+    transforms.Normalize(mean=config['mean'],
+                        std=config['std'])
+    ])
+
+def CCHFTransform(config):
+    return transforms.Compose([
+    transforms.ToTensor(),
+    v2.RandomHorizontalFlip(p=0.5),
+    transforms.CenterCrop(config['centor_crop']),
+    transforms.Resize(config['resize_size']),
+    transforms.Normalize(mean=config['mean'],
+                        std=config['std'])
+    ])
+
+def CCASTransform(config):
+    return transforms.Compose([
+    transforms.ToTensor(),
+    v2.RandomAdjustSharpness(sharpness_factor=2),
+    transforms.CenterCrop(config['centor_crop']),
+    transforms.Resize(config['resize_size']),
+    transforms.Normalize(mean=config['mean'],
+                        std=config['std'])
+    ])
+    
+def CCACTransform(config):
+    return transforms.Compose([
+    transforms.ToTensor(),
+    v2.RandomAutocontrast(),
     transforms.CenterCrop(config['centor_crop']),
     transforms.Resize(config['resize_size']),
     transforms.Normalize(mean=config['mean'],
