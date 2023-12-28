@@ -51,6 +51,16 @@ def get_model(model_str: str):
         return TinyNet_c  
     elif model_str == 'tinynet_e':
         return TinyNet_E  
+    elif model_str == 'hard_efficientnet':
+        return Hard_Efficientnet_b5  
+    elif model_str == 'hard_tiny_vit':
+        return Hard_tiny_vit 
+    elif model_str == 'hard_new_tiny_vit':
+        return Hard_new_tiny_vit 
+    elif model_str == 'tiny_vit':
+        return tiny_vit_21m_224_dist_in22k_ft_in1k
+    elif model_str == 'cross_stitch':
+        return CrossStitchNetwork    
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
@@ -531,3 +541,378 @@ class TinyNet_E(nn.Module):
         x = self.model(x)
         x = self.linear(x)
         return x
+
+
+class tf_efficientnet_b5_ns(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnet_b5_ns, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnet_b5.ns_jft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class tf_efficientnetv2_m_in21k(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnetv2_m_in21k, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnetv2_m.in21k_ft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = Identity()
+
+        self.linear = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        x = self.linear(x)
+        return x
+    
+class tf_efficientnet_b2_ns_jft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(tf_efficientnet_b2_ns_jft_in1k, self).__init__()
+        
+        self.model = timm.create_model("tf_efficientnet_b2.ns_jft_in1k", pretrained=True)
+        pre_layer = self.model.classifier.in_features
+        self.model.classifier = nn.Linear(pre_layer, num_classes)
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class caformer_b36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(caformer_b36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("caformer_b36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+class swinv2_base_window12to16_192to256_ms_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(swinv2_base_window12to16_192to256_ms_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("swinv2_base_window12to16_192to256.ms_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class caformer_s36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(caformer_s36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("caformer_s36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class convformer_m36_sail_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(convformer_m36_sail_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("convformer_m36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+    
+class convnext_small_in12k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(convnext_small_in12k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("convnext_small.in12k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class tiny_vit_21m_224_dist_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(tiny_vit_21m_224_dist_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class tiny_vit_11m_224_dist_in22k_ft_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(tiny_vit_11m_224_dist_in22k_ft_in1k, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_11m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class efficientformerv2_l_snap_dist_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(efficientformerv2_l_snap_dist_in1k, self).__init__()
+        
+        self.model = timm.create_model("efficientformerv2_l.snap_dist_in1k", pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = nn.Linear(pre_layer, num_classes)
+        self.model.head_dist = nn.Linear(pre_layer, num_classes)
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class efficientvit_b3_r224_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(efficientvit_b3_r224_in1k, self).__init__()
+        
+        self.model = timm.create_model("efficientvit_b3.r224_in1k", pretrained=True)
+        pre_layer = self.model.head.classifier[4].in_features
+        self.model.head.classifier[4] = nn.Linear(pre_layer, num_classes)
+
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class efficientformerv2_l_snap_dist_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(efficientformerv2_l_snap_dist_in1k, self).__init__()
+        
+        self.model = timm.create_model("efficientformerv2_l.snap_dist_in1k", pretrained=True)
+        pre_layer = self.model.head.in_features
+        self.model.head = nn.Linear(pre_layer, num_classes)
+        self.model.head_dist = nn.Linear(pre_layer, num_classes)
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class maxvit_tiny_rw_224_sw_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(maxvit_tiny_rw_224_sw_in1k, self).__init__()
+        
+        self.model = timm.create_model("maxvit_tiny_rw_224.sw_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class convnextv2_tiny_fcmae_ft_in22k_in1k(nn.Module):
+    def __init__(self, num_classes):
+        super(convnextv2_tiny_fcmae_ft_in22k_in1k, self).__init__()
+        
+        self.model = timm.create_model("convnextv2_tiny.fcmae_ft_in22k_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+
+
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+class Hard_Efficientnet_b5(nn.Module):
+    def __init__(self, num_classes):
+        super(Hard_Efficientnet_b5, self).__init__()
+        
+        self.model = models.efficientnet_b5(pretrained=True)
+        pre_layer = self.model.classifier[1].in_features
+        self.model.classifier = Identity()
+
+        self.linear_mask = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes[0])
+        )
+        self.linear_gender = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes[1])
+        )
+        self.linear_age = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(pre_layer, num_classes[2])
+        )
+
+
+    def forward(self, x, task):
+        
+        x = self.model(x)
+
+        if task == "mask":
+            x =  self.linear_mask(x)
+        elif task == "gender":
+            x =  self.linear_gender(x)
+        elif task == "age":
+            x =  self.linear_age(x)
+
+        # x = self.linear(x)
+
+        return x
+    
+
+
+class Hard_tiny_vit(nn.Module):
+    def __init__(self, num_classes):
+        super(Hard_tiny_vit, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.model.head.fc = Identity()
+        self.linear_mask = nn.Linear(pre_layer, num_classes[0])
+        self.linear_gender = nn.Linear(pre_layer, num_classes[1])
+        self.linear_age = nn.Linear(pre_layer, num_classes[2])
+        
+    def forward(self, x, task):
+        
+        x = self.model(x)
+
+        if task == "mask":
+            x =  self.linear_mask(x)
+        elif task == "gender":
+            x =  self.linear_gender(x)
+        elif task == "age":
+            x =  self.linear_age(x)
+
+        return x
+
+class SelectAdaptivePool2d(nn.Module):
+    def __init__(self, pool_type='avg', flatten=False):
+        super().__init__()
+        self.flatten = flatten
+        self.pool = nn.AdaptiveAvgPool2d((1, 1)) if pool_type == 'avg' else nn.AdaptiveMaxPool2d((1, 1))
+
+    def forward(self, x):
+        x = self.pool(x)
+        if self.flatten:
+            x = torch.flatten(x, 1)
+        return x    
+
+class Hard_new_tiny_vit(nn.Module):
+    def __init__(self, num_classes):
+        super(Hard_new_tiny_vit, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head = Identity()
+        self.linear_mask = nn.Sequential(
+            SelectAdaptivePool2d(pool_type='avg', flatten=Identity()),
+            nn.LayerNorm(pre_layer), 
+            nn.Flatten(),
+            nn.Dropout(p=0.0),
+            nn.Linear(pre_layer, num_classes[0])
+            )
+        self.linear_gender = nn.Sequential(
+            SelectAdaptivePool2d(pool_type='avg', flatten=Identity()),
+            nn.LayerNorm(pre_layer), 
+            nn.Flatten(),
+            nn.Dropout(p=0.0),
+            nn.Linear(pre_layer, num_classes[1])
+            )
+        self.linear_age = nn.Sequential(
+            SelectAdaptivePool2d(pool_type='avg', flatten=Identity()),
+            nn.LayerNorm(pre_layer), 
+            nn.Flatten(),
+            nn.Dropout(p=0.0),
+            nn.Linear(pre_layer, num_classes[2]))
+        
+    def forward(self, x, task):
+        
+        x = self.model(x)
+
+        if task == "mask":
+            x =  self.linear_mask(x)
+        elif task == "gender":
+            x =  self.linear_gender(x)
+        elif task == "age":
+            x =  self.linear_age(x)
+
+        return x
+    
+class TinyVit(nn.Module):
+    def __init__(self, num_class):
+        super(TinyVit, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.head.fc = nn.Linear(pre_layer, num_class)
+
+    def forward(self, x):
+        
+        x = self.model(x)
+
+        return x
+    
+
+    
+class CrossStitchUnit(nn.Module):
+    def __init__(self):
+        super(CrossStitchUnit, self).__init__()
+        self.alpha = nn.Parameter(torch.randn(3, 3))
+
+    def forward(self, x1, x2, x3):
+        x1_out = self.alpha[0, 0]*x1 + self.alpha[0, 1]*x2 + self.alpha[0, 2]*x3
+        x2_out = self.alpha[1, 0]*x1 + self.alpha[1, 1]*x2 + self.alpha[1, 2]*x3
+        x3_out = self.alpha[2, 0]*x1 + self.alpha[2, 1]*x2 + self.alpha[2, 2]*x3
+        return x1_out, x2_out, x3_out  
+
+class CrossStitchNetwork(nn.Module):
+    def __init__(self):
+        super(CrossStitchNetwork, self).__init__()
+
+        self.model_1 = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model_1.head.fc.in_features
+        self.model_1.head.fc = Identity()
+        self.model_2 = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        self.model_2.head.fc = Identity()
+        self.model_3 = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        self.model_3.head.fc = Identity()
+
+        self.cross_stitch = CrossStitchUnit()
+
+        self.fc1 = nn.Linear(pre_layer, 3)
+        self.fc2 = nn.Linear(pre_layer, 2)
+        self.fc3 = nn.Linear(pre_layer, 3)
+
+    def forward(self, x):
+        x1 = self.model_1(x)
+        x2 = self.model_2(x)
+        x3 = self.model_3(x)
+        x1, x2, x3 = self.cross_stitch(x1, x2, x3)
+        x1 = self.fc1(x1)
+        x2 = self.fc2(x2)
+        x3 = self.fc3(x3)
+        x_list = [x1, x2, x3]
+        return x_list
