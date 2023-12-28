@@ -61,6 +61,46 @@ def get_model(model_str: str):
         return tiny_vit_21m_224_dist_in22k_ft_in1k
     elif model_str == 'cross_stitch':
         return CrossStitchNetwork    
+        return TinyNet_E
+    elif model_str == 'tf_efficientnet_b5.ns_jft_in1k':
+        return tf_efficientnet_b5_ns
+    elif model_str == 'tf_efficientnetv2_m.in21k_ft_in1k':
+        return tf_efficientnetv2_m_in21k
+    elif model_str == 'caformer_b36.sail_in22k_ft_in1k':
+        return caformer_b36_sail_in22k_ft_in1k
+    elif model_str == 'swinv2_base_window12to16_192to256.ms_in22k_ft_in1k':
+        return swinv2_base_window12to16_192to256_ms_in22k_ft_in1k
+    elif model_str == 'caformer_s36.sail_in22k_ft_in1k':
+        return caformer_s36_sail_in22k_ft_in1k
+    elif model_str == 'convformer_m36.sail_in22k_ft_in1k':
+        return convformer_m36_sail_in22k_ft_in1k
+    elif model_str == 'tiny_vit_21m_224.dist_in22k_ft_in1k':
+        return tiny_vit_21m_224_dist_in22k_ft_in1k
+    elif model_str == 'convnext_small.in12k_ft_in1k':
+        return convnext_small_in12k_ft_in1k
+    elif model_str == 'tf_efficientnet_b2.ns_jft_in1k':
+        return tf_efficientnet_b2_ns_jft_in1k
+    elif model_str == 'efficientformerv2_l.snap_dist_in1k':
+        return efficientformerv2_l_snap_dist_in1k
+    elif model_str == 'efficientvit_b3.r224_in1k':
+        return efficientvit_b3_r224_in1k
+    elif model_str == 'tiny_vit_11m_224.dist_in22k_ft_in1k':
+        return tiny_vit_11m_224_dist_in22k_ft_in1k
+    elif model_str == 'maxvit_tiny_rw_224.sw_in1k':
+        return maxvit_tiny_rw_224_sw_in1k
+    elif model_str == 'convnextv2_tiny.fcmae_ft_in22k_in1k':
+        return convnextv2_tiny_fcmae_ft_in22k_in1k
+    elif model_str == 'tiny_vit_21m_224_dist_in22k_ft_in1k_froze':
+        return tiny_vit_21m_224_dist_in22k_ft_in1k_froze
+    elif model_str == 'tiny_vit_21m_224_dist_in22k_ft_in1k_froze012':
+        return tiny_vit_21m_224_dist_in22k_ft_in1k_froze012
+    elif model_str == 'caformer_b36_sail_in22k_ft_in1k_froze01':
+        return caformer_b36_sail_in22k_ft_in1k_froze01
+    elif model_str == 'convformer_m36_sail_in22k_ft_in1k_freeze':
+        return convformer_m36_sail_in22k_ft_in1k_freeze
+    # elif model_str == 'xcit_small_12_p8_224.fb_dist_in1k':
+    #     return timm.create_model(model_str,pretrained=True)
+    
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True, norm="bnorm", relu=True):
@@ -541,8 +581,12 @@ class TinyNet_E(nn.Module):
         x = self.model(x)
         x = self.linear(x)
         return x
+<<<<<<< HEAD
 
 
+=======
+    
+>>>>>>> a3ccce7f245b2b5f21232b35ba26bb6c95d6321a
 class tf_efficientnet_b5_ns(nn.Module):
     def __init__(self, num_classes):
         super(tf_efficientnet_b5_ns, self).__init__()
@@ -740,6 +784,7 @@ class convnextv2_tiny_fcmae_ft_in22k_in1k(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
+<<<<<<< HEAD
 
 class Hard_Efficientnet_b5(nn.Module):
     def __init__(self, num_classes):
@@ -916,3 +961,87 @@ class CrossStitchNetwork(nn.Module):
         x3 = self.fc3(x3)
         x_list = [x1, x2, x3]
         return x_list
+=======
+    
+class tiny_vit_21m_224_dist_in22k_ft_in1k_froze(nn.Module):
+    def __init__(self, num_classes):
+        super(tiny_vit_21m_224_dist_in22k_ft_in1k_froze, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        for param in self.model.parameters():
+            param.requires_grad = False
+        for param in self.model.stages[2].parameters():
+            param.requires_grad = True
+        for param in self.model.stages[3].parameters():
+            param.requires_grad = True
+        for param in self.model.head.parameters():
+            param.requires_grad = True
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+class tiny_vit_21m_224_dist_in22k_ft_in1k_froze012(nn.Module):
+    def __init__(self, num_classes):
+        super(tiny_vit_21m_224_dist_in22k_ft_in1k_froze012, self).__init__()
+        
+        self.model = timm.create_model("tiny_vit_21m_224.dist_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.in_features
+        self.model.head.fc = nn.Linear(pre_layer, num_classes)
+        for param in self.model.parameters():
+            param.requires_grad = False
+        # for param in self.model.stages[2].parameters():
+        #     param.requires_grad = True
+        for param in self.model.stages[3].parameters():
+            param.requires_grad = True
+        for param in self.model.head.parameters():
+            param.requires_grad = True
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+    
+class caformer_b36_sail_in22k_ft_in1k_froze01(nn.Module):
+    def __init__(self, num_classes):
+        super(caformer_b36_sail_in22k_ft_in1k_froze01, self).__init__()
+        
+        self.model = timm.create_model("caformer_b36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+        for param in self.model.stages[2].parameters():
+            param.requires_grad = True
+        for param in self.model.stages[3].parameters():
+            param.requires_grad = True
+        for param in self.model.head.parameters():
+            param.requires_grad = True
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+class convformer_m36_sail_in22k_ft_in1k_freeze(nn.Module):
+    def __init__(self, num_classes):
+        super(convformer_m36_sail_in22k_ft_in1k_freeze, self).__init__()
+        
+        self.model = timm.create_model("convformer_m36.sail_in22k_ft_in1k", pretrained=True)
+        pre_layer = self.model.head.fc.fc2.in_features
+        self.model.head.fc.fc2 = nn.Linear(pre_layer, num_classes)
+        
+        for param in self.model.parameters():
+            param.requires_grad = False
+        for param in self.model.stages[2].parameters():
+            param.requires_grad = True
+        for param in self.model.stages[3].parameters():
+            param.requires_grad = True
+        for param in self.model.head.parameters():
+            param.requires_grad = True
+        
+    def forward(self, x):
+        x = self.model(x)
+        return x
+>>>>>>> a3ccce7f245b2b5f21232b35ba26bb6c95d6321a
