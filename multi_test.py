@@ -7,9 +7,8 @@ import os, sys, random
 from tqdm import tqdm
 from datetime import datetime
 
-from modules.transforms import get_transform_function
 from modules.utils import load_yaml,save_yaml
-from modules.datasets import TestDataset
+from modules.datasets import MaskBaseDataset, TestDataset
 from model.models import get_model
 
 prj_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,13 +17,13 @@ sys.path.append(prj_dir)
 import warnings
 warnings.filterwarnings('ignore')
 if __name__ == '__main__':
-    
+
     #Load Yaml
     config = load_yaml(os.path.join(prj_dir, 'config', 'test.yaml'))
-    train_config = load_yaml(os.path.join(prj_dir, 'results', 'train', config['train_serial'], 'train.yaml'))
-   
+    train_config = load_yaml(os.path.join(prj_dir, 'results', 'train', config['train_serial'], f'train.yaml'))
+
     pred_serial = config['train_serial'] + '_' + datetime.now().strftime("%Y%m%d_%H%M%S")
-    
+
     # Set random seed, deterministic
     torch.cuda.manual_seed(train_config['seed'])
     torch.manual_seed(train_config['seed'])
@@ -46,7 +45,12 @@ if __name__ == '__main__':
     info_path = os.path.join(data_dir, "info.csv")
     info = pd.read_csv(info_path)
     
-    transform = get_transform_function(train_config['transform'],train_config)
+    transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Resize(train_config['resize_size']),
+    transforms.Normalize(mean=train_config['mean'],
+                        std=train_config['std'])
+    ])
     
     img_paths = [os.path.join(img_root, img_id) for img_id in info.ImageID]
     test_dataset = TestDataset(img_paths, transform)
@@ -55,37 +59,42 @@ if __name__ == '__main__':
                                 num_workers=config['num_workers'],
                                 shuffle=False,
                                 drop_last=False)
-    
-    if train_config['model_custom']:
-        model = get_model(train_config['model']['architecture'])
-        model = model(**train_config['model']['args'])
-    else:
-        model = get_model(train_config['model']['architecture'])
-        model = model(train_config['model']['architecture'], **train_config['model']['args'])
+
+    model_dir = os.path.join(prj_dir, 'results', 'train', config['train_serial'])
+    check_point_path = os.path.join(model_dir, f'best_model.pt')
+
+    # Adjust this line based on how you retrieve the model architecture and args from your config
+    model = get_model(train_config[f'model']['architecture'])
+    model = model(**train_config[f'model']['args'])
     model = model.to(device)
-    
-    print(f"Load model architecture: {train_config['model']['architecture']}")
-    
-    check_point_path = os.path.join(prj_dir, 'results', 'train', config['train_serial'], 'best_model.pt')
-    check_point = torch.load(check_point_path,map_location=torch.device("cpu"))
+
+    # Load the checkpoint
+    check_point = torch.load(check_point_path, map_location=torch.device("cpu"))
     model.load_state_dict(check_point['model'])
-    
-    
-    # Save config
-    save_yaml(os.path.join(pred_result_dir, 'train.yaml'), train_config)
-    save_yaml(os.path.join(pred_result_dir, 'predict.yaml'), config)
-    
     model.eval()
-    preds = []
+
+ 
+    # Make predictions
+    model_preds = []
     with torch.no_grad():
         for iter, img in enumerate(tqdm(test_dataloader)):
             img = img.to(device)
             
             batch_size = img.shape[0]
-            pred_value = model(img)
-            pred_value = pred_value.argmax(dim=-1)
-            preds.extend(pred_value.cpu().numpy())
-    info["ans"] = preds
+            # pred_value_1 = models[0](img)
+            # pred_value_2 = models[1](img)
+            # pred_value_3 = models[2](img)
+            pred_value_1 = model(img, "mask")
+            pred_value_2 = model(img, "gender")
+            pred_value_3 = model(img, "age")            
+            pred_value_1 = pred_value_1.argmax(dim=-1)
+            pred_value_2 = pred_value_2.argmax(dim=-1)
+            pred_value_3 = pred_value_3.argmax(dim=-1)
+            pred_value = MaskBaseDataset.encode_multi_class(pred_value_1, pred_value_2, pred_value_3)
+            model_preds.extend(pred_value.cpu().numpy())
+
+
+    info["ans"] = model_preds
     save_path = os.path.join(pred_result_dir , "output.csv")
     info.to_csv(save_path, index=False)
     print(f"Inference Done! Inference result saved at {save_path}")

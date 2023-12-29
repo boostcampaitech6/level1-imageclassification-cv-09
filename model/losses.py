@@ -18,12 +18,20 @@ def get_loss_function(loss_function_str: str):
 
     elif loss_function_str == "Cross_entropy":
         return cross_entropy_loss
+    
+    elif loss_function_str == "FocalTverskyLoss":
+        return FocalTverskyLoss
+    
+    elif loss_function_str == "TverskyLoss":
+        return TverskyLoss
 
-
-
-def cross_entropy_loss(output,target):
-    cross_entropy = nn.CrossEntropyLoss()
-    return cross_entropy(output,target)
+class cross_entropy_loss(nn.Module):
+    def __init__(self, weight, **kwargs):
+        super(cross_entropy_loss, self).__init__()
+        
+    def forward(self, output,target):
+        cross_entropy = nn.CrossEntropyLoss()
+        return cross_entropy(output,target)
 
 
 class CCE(nn.Module):
@@ -78,39 +86,77 @@ class GeneralizedDiceLoss(nn.Module):
         return 1. - dice
 
 class FocalLoss(nn.Module):
-    def __init__(self, gamma=2, alpha=0.25, size_average=True, device='cuda:0',**kwargs):
+    def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
         super(FocalLoss, self).__init__()
-        """
-        gamma(int) : focusing parameter.
-        alpha(list) : alpha-balanced term.
-        size_average(bool) : whether to apply reduction to the output.
-        """
-        self.gamma = gamma
         self.alpha = alpha
-        self.size_average = size_average
-        self.device = device
+        self.gamma = gamma
+        self.logits = logits
+        self.reduce = reduce
 
     def forward(self, inputs, targets):
-        # input : N * C (btach_size, num_class)
-        # target : N (batch_size)
+    
+        ce_loss = nn.CrossEntropyLoss()(inputs, targets)
 
-        CE = F.cross_entropy(inputs, targets, reduction='none')  # -log(pt)
-        pt = torch.exp(-CE)  # pt
-        loss = (1 - pt) ** self.gamma * CE  # -(1-pt)^rlog(pt)
+        pt = torch.exp(-ce_loss)
+        F_loss = self.alpha * (1-pt)**self.gamma * ce_loss
 
-        if self.alpha is not None:
-            alpha = torch.tensor(self.alpha, dtype=torch.float).to(self.device)
-            # in case that a minority class is not selected when mini-batch sampling
-            if len(self.alpha) != len(torch.unique(targets)):
-                temp = torch.zeros(len(self.alpha)).to(self.device)
-                temp[torch.unique(targets)] = alpha.index_select(0, torch.unique(targets))
-                alpha_t = temp.gather(0, targets)
-                loss = alpha_t * loss
-            else:
-                alpha_t = alpha.gather(0, targets)
-                loss = alpha_t * loss
+        if self.reduce:
+            return torch.mean(F_loss)
+        else:
+            return F_loss
+        
+class FocalTverskyLoss(torch.nn.Module):
+    def __init__(self, alpha=0.5, beta=0.5, gamma=0.75):
+        super(FocalTverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
 
-        if self.size_average:
-            loss = torch.mean(loss)
+    def forward(self, y_pred, y_true):
+        # Assuming y_pred is softmax output, so we don't need to apply softmax
+        # If not, apply softmax or log_softmax depending on your requirements
+        y_pred = F.softmax(y_pred,dim=1)
+        
+        # Convert y_true to one-hot format
+        y_true_one_hot = F.one_hot(y_true, num_classes=y_pred.size(1)).float()
 
-        return loss
+        # True Positives, False Positives & False Negatives
+        tp = torch.sum(y_pred * y_true_one_hot, dim=0)
+        fp = torch.sum(y_pred * (1 - y_true_one_hot), dim=0)
+        fn = torch.sum((1 - y_pred) * y_true_one_hot, dim=0)
+
+        # Tversky index for each class
+        tversky = tp / (tp + self.alpha * fp + self.beta * fn)
+
+        # Focal Tversky Loss
+        focal_tversky_loss = torch.sum(torch.pow((1 - tversky), 1 / self.gamma))
+
+        return focal_tversky_loss
+    
+class TverskyLoss(torch.nn.Module):
+    def __init__(self, alpha=0.5, beta=0.5):
+        super(TverskyLoss, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+
+    def forward(self, y_pred, y_true):
+        # Convert y_true to one-hot format if it's not already
+        y_pred = F.softmax(y_pred,dim=1)
+        y_true_one_hot = F.one_hot(y_true, num_classes=y_pred.size(1)).float()
+
+        # Flatten the tensors to shape (batch_size*num_classes, )
+        y_true_flat = y_true_one_hot.view(-1)
+        y_pred_flat = y_pred.view(-1)
+
+        # Calculate True Positives (TP), False Positives (FP), and False Negatives (FN)
+        tp = torch.sum(y_pred_flat * y_true_flat)
+        fp = torch.sum(y_pred_flat * (1 - y_true_flat))
+        fn = torch.sum((1 - y_pred_flat) * y_true_flat)
+
+        # Tversky index
+        tversky_index = tp / (tp + self.alpha * fp + self.beta * fn)
+
+        # Tversky loss
+        tversky_loss = 1 - tversky_index
+
+        return tversky_loss
