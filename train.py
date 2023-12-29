@@ -24,7 +24,7 @@ from model.losses import get_loss_function
 from model.models import get_model
 
 from modules.schedulers import get_scheduler
-from modules.datasets import CombinedDataset, MaskBaseDataset, MaskSplitByProfileDataset, ModifiedGenerationDataset
+from modules.datasets import MaskBaseDataset, MaskSplitByProfileDataset
 from modules.metrics import get_metric_function
 from modules.datasets import get_dataset_function
 from modules.transforms import get_transform_function

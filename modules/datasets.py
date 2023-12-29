@@ -261,7 +261,6 @@ class MaskBaseDataset(Dataset):
         train_set, val_set = random_split(self, [n_train, n_val])
         return train_set, val_set
 
-class ModifiedGenerationDataset(Dataset):
     """마스크 데이터셋의 기본 클래스"""
 
     num_classes = 3 * 2 * 3
@@ -289,7 +288,7 @@ class ModifiedGenerationDataset(Dataset):
         std=(0.237, 0.247, 0.246),
         val_ratio = 0.2,
     ):
-        self.data_gen_dir = data_gen_dir
+        self.data_dir = data_gen_dir
         self.mean = mean
         self.std = std
         self.val_ratio = val_ratio
@@ -300,12 +299,12 @@ class ModifiedGenerationDataset(Dataset):
 
     def setup(self):
         """데이터 디렉토리로부터 이미지 경로와 라벨을 설정하는 메서드"""
-        profiles = os.listdir(self.data_gen_dir)
+        profiles = os.listdir(self.data_dir)
         for profile in profiles:
             if profile.startswith("."):  # "." 로 시작하는 파일은 무시합니다
                 continue
 
-            img_path = os.path.join(self.data_gen_dir, profile)
+            img_path = os.path.join(self.data_dir, profile)
             _file_name, ext = os.path.splitext(profile)
             if _file_name != "generated":  # Adjust based on your filename structure
                 continue
@@ -415,36 +414,6 @@ class ModifiedGenerationDataset(Dataset):
         train_set, val_set = random_split(self, [n_train, n_val])
         return train_set, val_set
 
-class CombinedDataset(Dataset):
-    def __init__(self, dataset1, dataset2, val_ratio=0.2):
-        self.dataset1 = dataset1
-        self.dataset2 = dataset2
-        self.val_ratio = val_ratio
-
-        # 두 데이터셋의 총 길이를 계산합니다
-        self.total_length = len(dataset1) + len(dataset2)
-
-    def __getitem__(self, index):
-        # 어떤 데이터셋에서 항목을 가져올지 인덱스를 기반으로 결정합니다
-        if index < len(self.dataset1):
-            return self.dataset1[index]
-        else:
-            # 두 번째 데이터셋 내에서 인덱스를 조정합니다
-            adjusted_index = index - len(self.dataset1)
-            return self.dataset2[adjusted_index]
-
-    def __len__(self):
-        return self.total_length
-
-    def split_dataset(self) -> Tuple[Subset, Subset]:
-        """데이터셋을 학습과 검증용으로 나누는 메서드
-        데이터셋을 train 과 val 로 나눕니다,
-        pytorch 내부의 torch.utils.data.random_split 함수를 사용하여 torch.utils.data.Subset 클래스 둘로 나눕니다.
-        """
-        n_val = int(len(self) * self.val_ratio)
-        n_train = len(self) - n_val
-        train_set, val_set = random_split(self, [n_train, n_val])
-        return train_set, val_set
 
 class MaskSplitByProfileDataset(MaskBaseDataset):
     """

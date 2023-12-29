@@ -61,7 +61,6 @@ def get_model(model_str: str):
         return tiny_vit_21m_224_dist_in22k_ft_in1k
     elif model_str == 'cross_stitch':
         return CrossStitchNetwork    
-        return TinyNet_E
     elif model_str == 'tf_efficientnet_b5.ns_jft_in1k':
         return tf_efficientnet_b5_ns
     elif model_str == 'tf_efficientnetv2_m.in21k_ft_in1k':
@@ -581,12 +580,7 @@ class TinyNet_E(nn.Module):
         x = self.model(x)
         x = self.linear(x)
         return x
-<<<<<<< HEAD
-
-
-=======
     
->>>>>>> a3ccce7f245b2b5f21232b35ba26bb6c95d6321a
 class tf_efficientnet_b5_ns(nn.Module):
     def __init__(self, num_classes):
         super(tf_efficientnet_b5_ns, self).__init__()
@@ -784,7 +778,6 @@ class convnextv2_tiny_fcmae_ft_in22k_in1k(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
-<<<<<<< HEAD
 
 class Hard_Efficientnet_b5(nn.Module):
     def __init__(self, num_classes):
@@ -961,7 +954,6 @@ class CrossStitchNetwork(nn.Module):
         x3 = self.fc3(x3)
         x_list = [x1, x2, x3]
         return x_list
-=======
     
 class tiny_vit_21m_224_dist_in22k_ft_in1k_froze(nn.Module):
     def __init__(self, num_classes):
@@ -1044,4 +1036,3 @@ class convformer_m36_sail_in22k_ft_in1k_freeze(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
->>>>>>> a3ccce7f245b2b5f21232b35ba26bb6c95d6321a
