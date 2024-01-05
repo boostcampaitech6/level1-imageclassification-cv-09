@@ -40,7 +40,8 @@
 
 ## 1. 목적소개
 
-주로 비말에서 전파되는 COVID-19를 예방하기위해 올바른 마스크 착용이 중요하다. 그러나 모든 사람의 마스크 착용 상태를 확인하는 것은 비용이 너무 많이 든다. 따라서 본 대회의 목적은 이미지에서 사람의 성별, 나이의 구간, 마스크의 올바른 착용여부를 판단하고자한다. **총 18개의 클래스를 예측하는 모델을 제작했다.**
+주로 비말에서 전파되는 COVID-19를 예방하기위해 올바른 마스크 착용이 중요하다. 그러나 모든 사람의 마스크 착용 상태를 확인하는 것은 비용이 너무 많이 든다. 따라서 본 대회의 목적은 이미지에서 사람의 성별, 나이의 구간, 마스크의 올바른 착용여부를 판단하고자한다.
+**총 18개의 클래스를 예측하는 모델을 제작했다.**
 
 ## 2. 작업 환경
 
@@ -66,8 +67,8 @@
 |김민윤 &nbsp;&nbsp;&nbsp;&nbsp;|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
 |배종욱|Age transformation, Masked Image generation, Re-labeling 툴 제작|
 |신호준|BaseLine 코드 제작, Metric 구현, Activation Map 구현, 검수툴 제작, background removal & face zoom in, Backbone 및 Loss 실험|
-|최수진|Incorrect Masked Image generation, Dataset grouping|
-|전병관|Face detection 전략 수립 및 구현, Data noise 수정 코드 제작, 앙상블 전략 수립 및 구현|
+|전병관|Incorrect Masked Image generation, Dataset grouping|
+|최수진|Multi-task Modeling 구현, Backbone & Method Application 실험 및 결과 분석|
 
 </div>
 </div>
@@ -81,7 +82,7 @@
 <div align=center>
 
 <img src="이미지 업로드 해야함">
-
+</div>
  30대부터 40대까지의 데이터의 수량이 매우 부족함을 알 수 있다.
  클래스 분류는 60대 이상으로 되어있으나 데이터는 60세 데이터만 존재함을 알 수 있다.
 
@@ -107,7 +108,7 @@
 <div align=center>
 
 <img src="이미지 업로드 해야함">
-
+</div>
 - 전수조사를 위해 자체제작 툴을 제작하기로 한다.
 - 전략 4
 
