@@ -1,0 +1,12 @@
+gpu_num : 0
+seed : 111
+test_dir : "/home/hojun/Documents/code/boostcamp_pr1/data/data_base/eval"
+train_serial : "20231221_082602 20231221_051026 20231220_132107 20231220_135047 20231221_093438"
+
+
+#data
+num_workers: 12
+batch_size : 16
+
+#ensemble
+ensemble: soft
