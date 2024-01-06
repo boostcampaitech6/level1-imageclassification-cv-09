@@ -1,0 +1,65 @@
+gpu_num : 0
+seed : 111
+train_dir : "./data/train/images"
+
+#wandb
+wandb : False
+wandb_project: boostcamp_Project1
+wandb_run : tiny_vit_11m_224.dist_in22k_ft_in1k_224_base_focalloss_0.25_3
+wandb_note : wandb_note
+
+# Train / val
+val_size: 0.2
+
+#data
+dataset: SplitByProfileDataset_weightSampler_stratify
+input_size: [480,256]
+centor_crop : [256,256]
+resize_size: [224, 224]
+scaler: clahe
+transform: baseTransform
+num_workers: 12
+shuffle: True
+drop_last: False
+batch_size : 32
+mean : [0.485, 0.456, 0.406]
+std : [0.229, 0.224, 0.225]
+
+#Model
+model_custom : True
+multi_label : False
+model:
+  architecture : tiny_vit_11m_224.dist_in22k_ft_in1k
+  args:
+    num_classes : 18
+loss:
+  name: FocalLoss #Cross_entropy #FocalLoss # MeanCCELoss
+  args:
+    # weight: [1, 1, 1, 1]
+    alpha: 0.25
+    gamma: 3
+
+metrics: 
+  - acc
+  - f1_score
+  - mask_f1_score
+  - gender_f1_score
+  - age_f1_score
+  - mask_class_f1_score
+  - gender_class_f1_score
+  - age_class_f1_score
+
+optimizer:
+  name: AdamW
+  args:
+    lr: 5.0e-04
+    weight_decay: 5.0e-02
+scheduler:
+  name: CosineAnnealingLR
+  args:
+    T_max: 100
+    eta_min: 0
+
+#train
+n_epochs: 100
+early_stopping_count : 7
