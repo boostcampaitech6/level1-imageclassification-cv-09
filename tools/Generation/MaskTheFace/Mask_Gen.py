@@ -19,7 +19,7 @@ def create_masked_images(image_path, args, output_folder):
 def main():
     args = argparse.Namespace()
     args.detector = dlib.get_frontal_face_detector()
-    path_to_dlib_model = 'C:/boostcamp_ai/Project_1/MaskTheFace/dlib_models/shape_predictor_68_face_landmarks.dat'
+    path_to_dlib_model = '../MaskTheFace/dlib_models/shape_predictor_68_face_landmarks.dat'
     args.predictor = dlib.shape_predictor(path_to_dlib_model)
 
     args.mask_type = "surgical"  # 사용할 마스크 타입
@@ -31,8 +31,7 @@ def main():
     args.verbose = False        # 상세 출력 여부
     args.write_original_image = False # 원본 이미지 저장 여부
 
-    # parent_folder = 'C:/Users/bjong/Downloads/231217_generated_aligned-20231217T224558Z-001/231217_generated_aligned_filtered
-    parent_folder = "C:/Users/bjong/OneDrive/바탕 화면/masked"
+    parent_folder = "../MaskTheFace/masked"
 
     # 마스크 이미지를 저장할 폴더 이름 생성
     output_folder_name = f"{args.mask_type}_{args.pattern}_{args.pattern_weight}_{args.color}_{args.color_weight}"

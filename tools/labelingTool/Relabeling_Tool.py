@@ -4,21 +4,13 @@ from PIL import Image, ImageTk
 import pandas as pd
 import os
 
-
 # Color Definitions
-# 전체 배경
 BG_COLOR = "#212121"  
-# 버튼
 BTN_COLOR = "#3B3C3E"  
-# 활성 버튼 색상
 ACTIVE_BTN_COLOR = "#0078D7"
-# 글자색  
 TEXT_COLOR = "#E7E7E8"  
 # 이미지 폴더 경로
-IMAGE_PATH_PREFIX = "data/train/images"  
-# IMAGE_PATH_PREFIX = "D:/masked/data/train/images"  
-
-
+IMAGE_PATH_PREFIX = "../../data/images"  
 
 class LabelingTool:
     def __init__(self):
