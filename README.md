@@ -11,6 +11,7 @@
 - Public 2등 → Private 2등
 ![image](https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/46400961/c3544348-9eba-495f-b38c-0900559f8c36)
 <br>
+
 - Project Wrap-up Report: [Link](https://github.com/boostcampaitech6/level1-imageclassification-cv-09/blob/main/level1_cv-09_wrapup_report_compressed.pdf)
 
 
@@ -79,8 +80,8 @@
 <div align=center>
 
 |전체|문제 정의, 계획 및 타임라인 수립, 모델 튜닝, 아이디어 제시|
-|:----------:|:------:|
-|김민윤 &nbsp;&nbsp;&nbsp;&nbsp;|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
+|:----------:|:------|
+|김민윤|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
 |배종욱|Age transformation, Masked Image generation, Re-labeling 툴 제작|
 |신호준|BaseLine 코드 제작, Metric 구현, Activation Map 구현, 검수툴 제작, background removal & face zoom in, Backbone 및 Loss 실험|
 |전병관|Incorrect Masked Image generation, Dataset grouping|
@@ -107,6 +108,7 @@
 
 주로 비말에서 전파되는 COVID-19를 예방하기위해 올바른 마스크 착용이 중요하다. 그러나 모든 사람의 마스크 착용 상태를 확인하는 것은 비용이 너무 많이 든다. 따라서 본 대회의 목적은 이미지에서 사람의 성별, 나이의 구간, 마스크의 올바른 착용여부를 판단하고자한다.  
 **총 18개의 클래스를 예측하는 모델을 제작했다.**
+
 <br>
 
 
@@ -126,10 +128,11 @@
 
 ### Problem 2. Insufficient Focus on the Face
 
-<div style="text-align: center;" >
+<div align="center" >
 
 <img width="200" alt="Not Background
 remove Activation Map" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/b0f5cb04-60e0-4fab-91c5-035ecbd4b605">
+
 < Not Background
 remove Activation Map >
 
@@ -145,10 +148,11 @@ remove Activation Map >
     
 ### Problem 3. Data Imbalance
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="800" alt="Number of Data per Class"   src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/bea72ac2-adb3-491a-be13-4b918c9cf09b">
-    < Number of Data per Class >
+<img width="600" alt="Number of Data per Class"   src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/bea72ac2-adb3-491a-be13-4b918c9cf09b">
+
+< Number of Data per Class >
 </div>
 <br>
     
@@ -156,7 +160,8 @@ remove Activation Map >
 
 <br>
 <br>
-    <div style="text-align: center;" >
+
+<div align="center" >
 
 <img width="230" alt="Mask Class Distribution"   src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/8bb62be0-cee5-49fb-9496-6e2a9f14a048">
         
@@ -169,7 +174,7 @@ remove Activation Map >
 <br>
 <br>
 
-<div style="text-align: center;" >
+<div align="center" >
 
 <img width="1860" alt="Age Class Distribution" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/81c3321d-d5e9-4405-a12f-1ecdc7243a75">
         
@@ -190,18 +195,20 @@ remove Activation Map >
 # ❤️‍🩹 Problem Solve
 
 ## Solution 1. Tool for Relabeling
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="805" alt="Data Error Checking Tool" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/5155cd91-fe3d-46dc-bab4-8a94a442422d">
+<img width="600" alt="Data Error Checking Tool" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/5155cd91-fe3d-46dc-bab4-8a94a442422d">
+
 < Data Error Checking Tool >
 
 </div>
 
 <br>
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="1190" alt="Data Labeling Tool" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/76c939c5-f327-4889-bb3c-03d3a6f68608">
+<img width="600" alt="Data Labeling Tool" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/76c939c5-f327-4889-bb3c-03d3a6f68608">
+
 < Data Labeling Tool >
 
 </div>
@@ -216,7 +223,7 @@ remove Activation Map >
 
 ## Solution 2. Data Generation
 
-<div style="text-align: center;" >
+<div align="center" >
 
 <img width="450" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/d2ffd801-091f-4939-b298-d62c9ef6ba84">
 
@@ -226,9 +233,9 @@ remove Activation Map >
 <br>
 <br>
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="1074" alt="Convert face dataset to masked dataset" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/717976ee-9976-4a3e-8b9e-d30550536272">
+<img width="700" alt="Convert face dataset to masked dataset" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/717976ee-9976-4a3e-8b9e-d30550536272">
 
 < Convert face dataset to masked dataset >
 
@@ -244,9 +251,9 @@ Old 클래스(60+)가 다른 클래스 대비 상대적으로 데이터가 많�
 
 ## Solution 3. Image Preprocessing
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="1124" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/64fb1fb1-69ca-4e27-9337-b69ce3e1d86a">
+<img width="600" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/64fb1fb1-69ca-4e27-9337-b69ce3e1d86a">
 
 </div>
     
@@ -254,9 +261,9 @@ Old 클래스(60+)가 다른 클래스 대비 상대적으로 데이터가 많�
 <br>
 
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="1116" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/11bf152f-6d03-4778-adbb-5fcc88b5d4e7">
+<img width="600" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/11bf152f-6d03-4778-adbb-5fcc88b5d4e7">
 
 </div>
 <br>
@@ -270,7 +277,7 @@ Activation Map 분석을 통해 모델이 얼굴보다는 옷이나 배경에 �
 
 ## Solution 4. Construct Validation Dataset
 
-<div style="text-align: center;" >
+<div align="center" >
 
 <img width="600" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/9ea51ee5-e2be-4cf4-87bf-4807ef208cc0">
 
@@ -280,9 +287,9 @@ Activation Map 분석을 통해 모델이 얼굴보다는 옷이나 배경에 �
 <br>
 <br>
 
-<div style="text-align: center;" >
+<div align="center" >
 
-<img width="1008" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/e1200a6c-d3df-4ad7-a14a-c9f9463b57f1">
+<img width="600" alt="image" src="https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/136993865/e1200a6c-d3df-4ad7-a14a-c9f9463b57f1">
 
 
 </div>
@@ -303,33 +310,53 @@ Activation Map 분석을 통해 모델이 얼굴보다는 옷이나 배경에 �
 ## Strategy 1. Baseline Code
 
 ## Strategy 2. BackBone Models
+
+<div align="center" >
+ 
 ![image](https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/46400961/20a6dcbd-adf9-42aa-9f4f-97930f3e9b48)
-훈련시킨 Sota급 모델인 Caformer(B36)이 검증(Val) F1-score에서는 높은 성과를 보였으나, 테스트(Test) F1-score에서는 예상치 못하게 크게 하락하는 결과를 보였습니다. 이는 데이터셋의 크기가 작아 과적합이 발생했을 가능성이 높다고 판단했습니다. 이후, 파라미터 수가 적은 EfficientNet(B5) 모델로 실험했을 때, 검증 및 테스트 F1-score가 유사하게 나타나면서 데이터셋의 한계를 극복하는 데 적합한 모델의 중요성을 확인했습니다. 이에 따라 30M 파라미터 미만의 모델 중에서 작은 데이터셋에 적합한 모델을 찾기 위해 Tiny ViT를 선택했고, 이 모델이 테스트 F1-score에서 가장 높은 성능을 달성했습니다.
+
+</div>
+   
+훈련시킨 Sota급 모델인 Caformer(B36)이 검증(Val) F1-score에서는 높은 성과를 보였으나, 테스트(Test) F1-score에서는 예상치 못하게 크게 하락하는 결과를 보였다. 이는 데이터셋의 크기가 작아 과적합이 발생했을 가능성이 높다고 판단되었다. 이후, 파라미터 수가 적은 EfficientNet(B5) 모델로 실험했을 때, 검증 및 테스트 F1-score가 유사하게 나타나면서 데이터셋의 한계를 극복하는 데 적합한 모델의 중요성을 확인했다. 이에 따라 30M 파라미터 미만의 모델 중에서 작은 데이터셋에 적합한 모델을 찾기 위해 Tiny ViT를 선택했고, 이 모델이 테스트 F1-score에서 가장 높은 성능을 달성했다.
+
+<br>
 
 ## Strategy 3. Multi-Task Learning (MTL)
-멀티 클래스 학습은 위에서 소개 드린 18개 클래스를 단일 태스크로 처리하는 반면, 멀티태스크 학습은 하드 파라미터 공유와 소프트 파라미터 공유, 두 가지 접근 방식을 통해 문제를 다룹니다. 비교 결과, 멀티 클래스 학습과 하드 파라미터 공유를 사용한 멀티태스크 학습은 F1-score에서 비슷한 성능을 보였지만, 멀티 클래스 학습이 정확도에서 미세하게 더 우수했습니다. 그러나 소프트 파라미터 공유 방식을 적용한 멀티태스크 학습은 F1-score에서도 안정적인 성능을 유지하면서 정확도 면에서 가장 높은 결과를 달성했습니다.
+
+<div align="center" >
+ 
+![image](https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/46400961/14b95703-4c2f-4a3a-bcc3-0a024709aaf3)
+
+</div>
+
+멀티 클래스 학습은 위에서 소개한 18개 클래스를 단일 태스크로 처리하는 반면, 멀티태스크 학습은 하드 파라미터 공유와 소프트 파라미터 공유, 두 가지 접근 방식을 통해 문제를 다룬다. 비교 결과, 멀티 클래스 학습과 하드 파라미터 공유를 사용한 멀티태스크 학습은 F1-score에서 비슷한 성능을 보였지만, 멀티 클래스 학습이 정확도에서 미세하게 더 우수했다. 그러나 소프트 파라미터 공유 방식을 적용한 멀티태스크 학습은 F1-score에서도 안정적인 성능을 유지하면서 정확도 면에서 가장 높은 결과를 달성했다.
+
+<br>
+
 ## Strategy 4. Loss Function
-Cross Entropy Loss를 사용했을 때 특정 클래스를 정확하게 분류하는 데 어려움을 겪었는데, 이는 클래스 간 불균형 문제에서 비롯된 것으로 분석되었습니다. Cross Entropy Loss는 이미 잘 분류하는 클래스에 더 초점을 맞추는 경향이 있어, 클래스 불균형 문제를 해결하기에는 적합하지 않다고 판단했습니다. 이에 따라, 비교적 쉽게 분류할 수 있는 클래스에는 패널티를, 분류하기 어려운 클래스에는 가중치를 부여하여 이 문제를 해결하기 위해 Focal Loss 함수를 도입했습니다. Focal Loss를 적용한 결과, 이전에 F1-score가 낮았던 클래스의 성능이 크게 향상되었으며, 전체적인 F1-score도 상승하였습니다.
+Cross Entropy Loss를 사용했을 때 특정 클래스를 정확하게 분류하는 데 어려움을 겪었는데, 이는 클래스 간 불균형 문제에서 비롯된 것으로 분석되었다. Cross Entropy Loss는 이미 잘 분류하는 클래스에 더 초점을 맞추는 경향이 있어, 클래스 불균형 문제를 해결하기에는 적합하지 않다고 판단했다. 이에 따라, 비교적 쉽게 분류할 수 있는 클래스에는 패널티를, 분류하기 어려운 클래스에는 가중치를 부여하여 이 문제를 해결하기 위해 Focal Loss 함수를 도입했다. Focal Loss를 적용한 결과, 이전에 F1-score가 낮았던 클래스의 성능이 크게 향상되었으며, 전체적인 F1-score도 상승하였다.
+
+<br>
+
 ## Strategy 5. Fine-tune
-Fine-tuning에는 세 가지 주요 방식이 있습니다. 1) 모델 전체를 학습시키는 방법, 2) 일부 레이어를 고정한 채 나머지 레이어를 학습시키는 방법, 그리고 3) 분류기를 제외한 모든 레이어를 고정하고 분류기만 학습시키는 방법입니다. 데이터셋의 크기가 제한적이고, 특히 얼굴 이미지를 다루는 상황에서는 두 번째 방식인 일부 레이어만 학습시키는 접근을 선택했습니다. 이 결정은 사전 학습된 모델의 초기 레이어가 보편적 특징을, 반면에 후반부 레이어가 더 복잡하고 특정 도메인에 특화된 고차원적 특징을 학습한다는 사실에 기반합니다. 얼굴 데이터셋 같은 특정 분야에서 중요한 세밀한 특징을 포착하기 위해, 후반부 레이어의 세분화된 학습이 더욱 효과적이라고 판단했습니다. 이 방법을 적용함으로써, 기존 대비 F1-score가 5% 이상 개선되는 결과를 달성했습니다.
+
+<div align="center" >
+ 
+![image](https://github.com/boostcampaitech6/level1-imageclassification-cv-09/assets/46400961/e785eaeb-cf53-4984-a194-608778f67951)
+
+</div>
+
+Fine-tuning에는 세 가지 주요 방식이 있다. 1) 모델 전체를 학습시키는 방법, 2) 일부 레이어를 고정한 채 나머지 레이어를 학습시키는 방법, 그리고 3) 분류기를 제외한 모든 레이어를 고정하고 분류기만 학습시키는 방법이 존재한다. 본 대회는 데이터셋의 크기가 제한적이며 얼굴 이미지를 다루는 특성상, 두 번째 방식인 일부 레이어만 학습시키는 방법을 선택했다. 이 결정은 사전 학습된 모델의 초기 레이어가 일반적인 특징을 학습하는 반면에 후반부 레이어는 보다 복잡하고 특정 도메인에 특화된 고차원적 특징을 학습한다는 사실에 기반한다. 얼굴 데이터셋 같이 특정 분야에서 중요하고 세밀한 특징을 잘 포착하기 위해서는, 후반부 레이어의 세분화된 학습이 더욱 효과적이라고 판단했다. 이 방법을 적용함으로써, 기존 대비 F1-score가 5% 이상 개선되는 결과를 달성했다.
+
+<br>
+    
 ## Strategy 6. Model Ensemble
-실험 과정에서 Top 1 모델이 훈련 데이터에 과적합되는 현상을 관찰했습니다. 이 문제를 해결하기 위해, 우리는 앙상블 기법을 도입했습니다. 구체적으로, 우리는 기존 데이터셋, 데이터를 제거한 데이터셋, 레이블을 수정한 데이터셋, 그리고 stage-2 데이터셋 등 총 네 가지 다양한 데이터셋을 사용했습니다. 이들 각각에 대해 Top 1 모델 아키텍처를 학습시킨 후, 이 네 개의 모델을 결합하여 소프트 보팅(Soft Voting) 앙상블 방식을 적용했습니다. 이 접근법을 통해 모델의 F1-score가 소폭 상승하는 결과를 달성했습니다.
+실험 과정에서 Top 1 모델이 훈련 데이터에 과적합되는 현상을 관찰했다. 이 문제를 해결하기 위해, 우리는 앙상블 기법을 도입했다. 구체적으로, 우리는 기존 데이터셋, 데이터를 제거한 데이터셋, 레이블을 수정한 데이터셋, 그리고 stage-2 데이터셋 등 총 네 가지 다양한 데이터셋을 사용했다. 이들 각각에 대해 Top 1 모델 아키텍처를 학습시킨 후, 이 네 개의 모델을 결합하여 소프트 보팅(Soft Voting) 앙상블 방식을 적용했다. 이 접근법을 통해 모델의 F1-score가 소폭 상승하는 결과를 달성했다.
 
-<div align=center>
-
-<img src="이미지 입력 필요">
-
-</div>
-
-</div>
+<br>
 
 
 
-<div align=center>  
-
-![Footer](https://capsule-render.vercel.app/api?type=waving&color=7F7FD5&fontColor=FFFFFF&height=200&section=footer)
-
-</div>
 
 
 
