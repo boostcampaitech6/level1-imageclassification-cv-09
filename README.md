@@ -81,7 +81,7 @@
 
 |전체|문제 정의, 계획 및 타임라인 수립, 모델 튜닝, 아이디어 제시|
 |------|---|
-|김민윤|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
+|김민윤 &nbsp;&nbsp;&nbsp;&nbsp;|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
 |배종욱|Age transformation, Masked Image generation, Re-labeling 툴 제작|
 |신호준|BaseLine 코드 제작, Metric 구현, Activation Map 구현, 검수툴 제작, background removal & face zoom in, Backbone 및 Loss 실험|
 |전병관|Incorrect Masked Image generation, Dataset grouping|
@@ -317,7 +317,7 @@ Activation Map 분석을 통해 모델이 얼굴보다는 옷이나 배경에 �
 
 </div>
    
-훈련시킨 Sota급 모델인 Caformer(B36)이 검증(Val) F1-score에서는 높은 성과를 보였으나, 테스트(Test) F1-score에서는 예상치 못하게 크게 하락하는 결과를 보였다. 이는 데이터셋의 크기가 작아 과적합이 발생했을 가능성이 높다고 판단되었다. 이후, 파라미터 수가 적은 EfficientNet(B5) 모델로 실험했을 때, 검증 및 테스트 F1-score가 유사하게 나타나면서 데이터셋의 한계를 극복하는 데 적합한 모델의 중요성을 확인했다. 이에 따라 30M 파라미터 미만의 모델 중에서 작은 데이터셋에 적합한 모델을 찾기 위해 Tiny ViT를 선택했고, 이 모델이 테스트 F1-score에서 가장 높은 성능을 달성했다.
+훈련시킨 Sota급 모델인 Caformer(B36)는 검증(Val) F1-score에서 높은 성과를 보였으나, 테스트(Test) F1-score에서는 예상치 못하게 크게 하락하는 결과를 보였다. 이는 데이터셋의 크기가 작아 과적합이 발생했을 가능성이 높다고 판단되었다. 이후, 파라미터 수가 적은 EfficientNet(B5) 모델로 실험했을 때, 검증 및 테스트 F1-score가 유사하게 나타나면서 데이터셋의 한계를 극복하는 데 적합한 모델의 중요성을 확인했다. 이에 따라 30M 파라미터 미만의 모델 중에서 작은 데이터셋에 적합한 모델을 찾기 위해 Tiny ViT를 선택했고, 이 모델이 테스트 F1-score에서 가장 높은 성능을 달성했다.
 
 <br>
 
