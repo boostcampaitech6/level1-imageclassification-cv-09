@@ -80,7 +80,7 @@
 <div align=center>
 
 |전체|문제 정의, 계획 및 타임라인 수립, 모델 튜닝, 아이디어 제시|
-|:----------:|:------|
+|:-------------------:|:------|
 |&nbsp;김민윤&nbsp;|metric 구현, validation dataset 구축, background removal & face zoom in, age remove 함수 구현|
 |&nbsp;배종욱&nbsp;|Age transformation, Masked Image generation, Re-labeling 툴 제작|
 |&nbsp;신호준&nbsp;|BaseLine 코드 제작, Metric 구현, Activation Map 구현, 검수툴 제작, background removal & face zoom in, Backbone 및 Loss 실험|
